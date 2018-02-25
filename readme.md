@@ -7,10 +7,8 @@ to create a lightweight and fast tool which makes devloping with Esi easier.
 
 * Auth storage and auto refreshing
     * If your access token expires, EsiPysi will acquire a new one
-
 * Fast API calling and JSON parsing using [requests](https://github.com/requests/requests)
     * Uses the popular requests package for calling APIs and parsing the JSON response
-
 * Light input validation
     *  Only validates that the parameters are in the Esi Swagger Spec, does not validate types/values
 
