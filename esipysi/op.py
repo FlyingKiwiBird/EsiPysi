@@ -3,6 +3,7 @@ import requests
 import re
 import urllib
 from urllib.error import HTTPError
+from json.decoder import JSONDecodeError
 import logging
 
 logger = logging.getLogger("EsiPysi")
@@ -88,7 +89,12 @@ class EsiOp():
             raise HTTPError(url, r.status_code, r.text, headers, None)
         if raw:
             return r.text
-        return r.json()
+        try:
+            json_response = r.json()
+        except JSONDecodeError:
+            #Not JSON
+            return r.text
+        return json_response
 
     def __str__(self):
         return self.__operation_id
