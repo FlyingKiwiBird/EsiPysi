@@ -85,7 +85,7 @@ class EsiOp():
 
         if r.status_code != 200:
             raise HTTPError(url, r.status_code, r.text, headers, None)
-        if(raw):
+        if raw:
             return r.text
         return r.json()
         
