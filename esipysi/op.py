@@ -19,11 +19,12 @@ class EsiOp():
         :type base_url: string (url)
         :param user_agent: User agent to use when interacting with ESI 
         """
-        self.operation = operation
-        self.path = operation.get("path")
-        self.verb = operation.get("verb")
-        self.parameters = operation.get("parameters")
-        self.base_url = base_url
+        self.__operation = operation
+        self.__path = operation.get("path")
+        self.__verb = operation.get("verb")
+        self.__parameters = operation.get("parameters")
+        self.__operation_id = operation.get("operationId")
+        self.__base_url = base_url
         self.user_agent = user_agent
         self.auth = None
 
@@ -46,9 +47,9 @@ class EsiOp():
         :return: The API response
         :rtype: dict (if raw is True, a string)
         """
-        url = self.base_url + self.path
+        url = self.__base_url + self.__path
         #Handle parameters
-        for name, param in self.parameters.items():
+        for name, param in self.__parameters.items():
             required = param.get("required", False)
             if required:
                 if name not in parameters:
@@ -57,9 +58,9 @@ class EsiOp():
         data_parameters = {}
 
         for key, value in parameters.items():
-            if key not in self.parameters:
+            if key not in self.__parameters:
                 raise ValueError("'{}' is not a valid parameter".format(key))
-            param_info = self.parameters.get(key)
+            param_info = self.__parameters.get(key)
             #Handle path parameters
             if param_info.get("in") == "path":
                 escaped_value = urllib.parse.quote(value)
@@ -74,13 +75,13 @@ class EsiOp():
             auth_code = self.auth.authorize()
             headers["Authorization"] = "Bearer {}".format(auth_code)
         #Call operation
-        if self.verb == "get":
+        if self.__verb == "get":
             r = requests.get(url, params=data_parameters, headers=headers)
-        elif self.verb == "post":
+        elif self.__verb == "post":
             r = requests.post(url, data=data_parameters, headers=headers)
-        elif self.verb == "put":
+        elif self.__verb == "put":
             r = requests.put(url, data=data_parameters, headers=headers)
-        elif self.verb == "delete":
+        elif self.__verb == "delete":
             r = requests.delete(url, data=data_parameters, headers=headers)
 
         if r.status_code != 200:
@@ -88,4 +89,7 @@ class EsiOp():
         if raw:
             return r.text
         return r.json()
+
+    def __str__(self):
+        return self.__operation_id
         
