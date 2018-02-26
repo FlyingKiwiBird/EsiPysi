@@ -88,10 +88,12 @@ class EsiAuth():
         """
 
         url = "https://" + self.__login_server + "/oauth/verify"
-        headers = {"Authorization" : "Basic {}".format(self.basic_auth)}
-        r = requests.post(url, headers=headers)
+        auth = self.authorize()
+        headers = {"Authorization" : "Bearer {}".format(auth)}
+        r = requests.get(url, headers=headers)
 
         if r.status_code != 200:
+            print(r.text)
             raise HTTPError(url, r.status_code, r.text, headers, None)
 
         if raw:

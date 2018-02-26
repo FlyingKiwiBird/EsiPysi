@@ -1,6 +1,5 @@
 import unittest
-from esipysi.esipysi import EsiPysi
-from esipysi.esiauth import EsiAuth
+from esipysi import EsiPysi
 import datetime
 
 class BasicTests(unittest.TestCase):
