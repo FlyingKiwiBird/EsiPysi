@@ -12,6 +12,14 @@ to create a lightweight and fast tool which makes devloping with Esi easier.
 * Light input validation
     *  Only validates that the parameters are in the Esi Swagger Spec, does not validate types/values
 
+## Install
+
+Install with pip:
+
+```
+pip install git+git://github.com/FlyingKiwiBird/EsiPysi
+```
+
 ## How to use
 
 start with an EsiPysi object, this will keep track of global settings like which Esi version to use (_latest is reccomended)
