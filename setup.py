@@ -1,4 +1,5 @@
 import io
+import esipysi
 from setuptools import setup
 
 install_requirements = [
@@ -11,8 +12,8 @@ with io.open('readme.md') as reader:
 
 
 setup(
-    name = "esipysi",
-    version = "0.1",
+    name = "EsiPysi",
+    version = esipysi.__version__,
     author = "Flying Kiwi",
     author_email = "github@flyingkiwibird.com",
     description = ("A client for ESI, the API for Eve Online"),

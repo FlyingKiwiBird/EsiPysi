@@ -1,7 +1,7 @@
 import requests
 import json
-from .esiop import EsiOp
-from .esiauth import EsiAuth
+from .op import EsiOp
+from .auth import EsiAuth
 import logging
 
 logger = logging.getLogger("EsiPysi")
@@ -14,13 +14,10 @@ class EsiPysi():
     def __init__(self, swagger_url, **kwargs):
         """
         Initialize the class
-            
-        Parameters
-        ----------
-        swagger_url : str (url)
-            URL to the swagger spec json
-        user_agent : str
-            User agent for calls to ESI
+        
+        :param swagger_url: URL to the swagger spec json
+        :type swagger_url: String (url)
+        :param: user_agent the user agent that will be used for calls to ESI
         """
         self.user_agent = kwargs.get("user_agent")
 
@@ -61,11 +58,6 @@ class EsiPysi():
 
                 self.operations [operation_id] = new_op
 
-        #Temp for ref
-        #with open("reform.json", mode="w") as file:
-        #    op_json = json.dumps(self.operations, indent=2)
-        #    file.write(op_json)
-
     def __get_ref(self, path):
         path_split = path.split("/")
         if path_split[0] != "#":
@@ -80,16 +72,11 @@ class EsiPysi():
     def get_operation(self, operation_id):
         """
         Get an ESI operation from it's id
+        
+        :param operation_id: The operation id of the API call (e.g. "get_alliances_alliance_id")
 
-        Parameters
-        ----------
-        operation_id : str
-            The operation id of the API call (e.g. "get_alliances_alliance_id")
-
-        Returns
-        -------
-        operation : esiop class
-            A class object used to preform the operation
+        :return: An EsiOp which is used to interact with the ESI API
+        :rtype: EsiOp
         """
         operation = self.operations.get(operation_id)
         if operation is None:

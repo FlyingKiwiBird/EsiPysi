@@ -12,15 +12,12 @@ class EsiOp():
     def __init__(self, operation, base_url, user_agent):
         """
         Initialize the class - this should only be done through an EsiPysi class object
-            
-        Parameters
-        ----------
-        operation : object
-            An object provided by the EsiPysi class that defines an operation
-        base_url : str (url)
-            url of the base endpoint
-        user_agent : str
-            user agent to use when 
+
+        :param operation: A dict with the modified swagger structure that defines the operation
+        :type operation: dict
+        :param base_url: url to the base endpoint
+        :type base_url: string (url)
+        :param user_agent: User agent to use when interacting with ESI 
         """
         self.operation = operation
         self.path = operation.get("path")
@@ -34,21 +31,20 @@ class EsiOp():
         """
         Set the authorization for this operation
 
-        Parameters
-        ----------
-        esiauth : EsiAuth
-            an EsiAuth object which contains the authorization info
+        :param esiauth: An EsiAuth object which contains the authorization info
+        :type esiauth: EsiAuth
         """
         self.auth = esiauth
 
-    def execute(self, parameters):
+    def execute(self, parameters, raw=False):
         """
-        Execute the operation
-            
-        Parameters
-        ----------
-        parameters : object
-            A key-value pair object with the parameters for the function
+        Call the ESI API and retrieve the data
+
+        :param parameters: A key-value pair dict with the parameters for the API operation
+        :param raw: If True, return the raw text and do not parse into a dict
+
+        :return: The API response
+        :rtype: dict (if raw is True, a string)
         """
         url = self.base_url + self.path
         #Handle parameters
@@ -89,5 +85,7 @@ class EsiOp():
 
         if r.status_code != 200:
             raise HTTPError(url, r.status_code, r.text, headers, None)
+        if(raw):
+            return r.text
         return r.json()
         

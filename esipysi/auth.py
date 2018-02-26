@@ -15,18 +15,12 @@ class EsiAuth():
         """
         Sets up the authorization
 
-        Parameters
-        ----------
-        client_id : str
-            Eve 3rd party app client id
-        client_secret : str
-            Eve 3rd part app client secret
-        access_token : str
-            Access token from Eve SSO
-        refrest_token : str
-            Refresh token from Eve SSO
-        expires_at : datetime
-            When the token expires in UTC (Note: You will need to convert this to a datetime from the seconds CCP provides) 
+        :param client_id: Eve 3rd party app client id
+        :param client_secret: Eve 3rd part app client secret
+        :param access_token: Access token from Eve SSO
+        :param refrest_token: Refresh token from Eve SSO
+        :param expires_at: When the token expires in UTC (Note: You will need to convert this to a datetime from the seconds CCP provides)
+        :type expires_at: datetime
         """
         self.client_id = client_id
         self.client_secret = client_secret
@@ -40,18 +34,23 @@ class EsiAuth():
 
     def authorize(self):
         """
-        Returns the access token to be used in authorizations
+        Returns the access token to be used in authorizations.  This function is reccomended over 
+        getting the access token from the properties because it checks if the token is expired.
 
-        Returns
-        ----------
-        access_token : str
-            Used in authorization header for ESI calls
+        :return: a string that is the access token 
         """
-        if(self.expires_at <= datetime.datetime.utcnow()):
-            self.__refresh()
+        if(self.is_expired()):
+            self.get_new_token()
         return self.access_token
 
-    def __refresh(self):
+    def is_expired(self, offset=0):
+        offset_delta = datetime.timedelta(seconds=offset)
+        return (self.expires_at + offset_delta) <= datetime.datetime.utcnow()
+
+    def get_new_token(self):
+        """
+        Acquire a new token using the provided refresh token
+        """
         url = "https://login.eveonline.com/oauth/token"
         headers = {"Authorization" : "Basic {}".format(self.basic_auth), "Content-Type": "application/x-www-form-urlencoded"}
         data = {"grant_type":"refresh_token","refresh_token": self.refresh_token}
