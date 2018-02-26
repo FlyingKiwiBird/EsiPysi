@@ -63,7 +63,7 @@ class EsiOp():
             param_info = self.__parameters.get(key)
             #Handle path parameters
             if param_info.get("in") == "path":
-                escaped_value = urllib.parse.quote(value)
+                escaped_value = urllib.parse.quote(str(value))
                 url = url.replace("{" + param_info.get("name") + "}", escaped_value)
             else:
                 data_parameters[key] = value
