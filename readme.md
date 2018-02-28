@@ -11,6 +11,7 @@ to create a lightweight and fast tool which makes devloping with Esi easier.
     * Uses the popular requests package for calling APIs and parsing the JSON response
 * Light input validation
     *  Only validates that the parameters are in the Esi Swagger Spec, does not validate types/values
+* Caching using Redis
 
 ## Install
 
@@ -25,6 +26,8 @@ pip install git+git://github.com/FlyingKiwiBird/EsiPysi
 start with an EsiPysi object, this will keep track of global settings like which Esi version to use (_latest is reccomended)
 
 ```python
+from esipysi import EsiPysi
+
 esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here")
 ```
 
@@ -37,6 +40,8 @@ op = esi.get_operation("get_search")
 If it requires authorization you can use EsiAuth
 
 ```python
+from esipysi import EsiAuth
+
 auth = EsiAuth(CLIENT_ID, CLIENT_SECRET, ACCESS_TOKEN, REFRESH_TOKEN, EXPIRES_AT)
 op.set_auth(auth)
 ```
@@ -45,4 +50,23 @@ And then you can execute that operation with parameters
 
 ```python
 result = op.execute({"categories" : "character", "search" : "Flying Kiwi Bird"})
+```
+
+### Caching
+
+EsiPysi has caching provided by redis.  First create a redis client.
+
+Example from [redis-py](https://github.com/andymccurdy/redis-py)
+
+```python
+import redis
+r = redis.StrictRedis(host='localhost', port=6379, db=0)
+```
+
+Now create a RedisCache object and pass it to the EsiPysi object
+
+```python
+from esipysy import RedisCache, EsiPysi
+cache = RedisCache(r)
+esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here", cache=cache)
 ```

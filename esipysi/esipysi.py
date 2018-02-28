@@ -2,6 +2,7 @@ import requests
 import json
 from .op import EsiOp
 from .auth import EsiAuth
+from .cache.cache import EsiCache
 import logging
 
 logger = logging.getLogger("EsiPysi")
@@ -17,9 +18,15 @@ class EsiPysi():
         
         :param swagger_url: URL to the swagger spec json
         :type swagger_url: String (url)
-        :param: user_agent the user agent that will be used for calls to ESI
+        :param: user_agent - the user agent that will be used for calls to ESI
+        :param: cache - The optional EsiCache object to be used
         """
-        self.user_agent = kwargs.get("user_agent")
+        self.args = kwargs
+
+        cache = kwargs.get("cache")
+        if cache is not None:
+            if not issubclass(EsiCache, cache):
+                ValueError("cache should be of the type EsiCache")
 
         self.operations = {}
         self.data = {}
@@ -81,4 +88,4 @@ class EsiPysi():
         operation = self.operations.get(operation_id)
         if operation is None:
             return None
-        return EsiOp(operation, self.base_url, self.user_agent)
+        return EsiOp(operation, self.base_url, **self.args)

@@ -2,15 +2,18 @@
 import requests
 import re
 import urllib
+import json
 from urllib.error import HTTPError
 from json.decoder import JSONDecodeError
+from .cache.cache import EsiCache
+from .auth import EsiAuth
 import logging
 
 logger = logging.getLogger("EsiPysi")
 
 class EsiOp():
     """ A class to handle operations of the ESI api """
-    def __init__(self, operation, base_url, user_agent):
+    def __init__(self, operation, base_url, **kwargs):
         """
         Initialize the class - this should only be done through an EsiPysi class object
 
@@ -18,7 +21,8 @@ class EsiOp():
         :type operation: dict
         :param base_url: url to the base endpoint
         :type base_url: string (url)
-        :param user_agent: User agent to use when interacting with ESI 
+        :param: user_agent - User agent to use when interacting with ESI
+        :param: cache - EsiCache to use
         """
         self.__operation = operation
         self.__path = operation.get("path")
@@ -26,8 +30,16 @@ class EsiOp():
         self.__parameters = operation.get("parameters")
         self.__operation_id = operation.get("operationId")
         self.__base_url = base_url
-        self.user_agent = user_agent
+        self.__cached_seconds = operation.get("x-cached-seconds", -1)
+        self.user_agent = kwargs.get("user_agent")
+        self.cache = kwargs.get("cache")
         self.auth = None
+
+        self.use_cache = False
+        if self.cache is not None:
+            if not issubclass(EsiCache, self.cache):
+                ValueError("cache should be of the type EsiCache")
+            self.use_cache = True
 
     def set_auth(self, esiauth):
         """
@@ -36,6 +48,9 @@ class EsiOp():
         :param esiauth: An EsiAuth object which contains the authorization info
         :type esiauth: EsiAuth
         """
+        if not issubclass(EsiAuth, esiauth):
+            ValueError("esiauth should be of the type EsiAuth")
+        
         self.auth = esiauth
 
     def execute(self, parameters, raw=False):
@@ -48,6 +63,14 @@ class EsiOp():
         :return: The API response
         :rtype: dict (if raw is True, a string)
         """
+        if self.use_cache:
+            value = self.cache.retrieve(self.__operation_id, parameters)
+            if value is not None:
+                result = self.__get_value(value, raw)
+                if result is not None:
+                    return result
+
+
         url = self.__base_url + self.__path
         #Handle parameters
         for name, param in self.__parameters.items():
@@ -87,14 +110,21 @@ class EsiOp():
 
         if r.status_code != 200:
             raise HTTPError(url, r.status_code, r.text, headers, None)
+
+        if self.use_cache:
+            self.cache.store(self.__operation_id, parameters, r.text, self.__cached_seconds)
+        
+        return self.__get_value(r.text, raw)
+
+    def __get_value(self, text, raw):
         if raw:
-            return r.text
+            return text
         try:
-            json_response = r.json()
+            json_data = json.loads(text)
         except JSONDecodeError:
-            #Not JSON
-            return r.text
-        return json_response
+            return None
+        return json_data
+
 
     def __str__(self):
         return self.__operation_id

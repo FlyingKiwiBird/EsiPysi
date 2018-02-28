@@ -2,9 +2,8 @@ import io
 import esipysi
 from setuptools import setup
 
-install_requirements = [
-    "requests"
-]
+with io.open("requirements.txt") as reader:
+    install_requirements = [line.strip("\n") for line in reader]
 
 with io.open('readme.md') as reader:
     readme = reader.read()
