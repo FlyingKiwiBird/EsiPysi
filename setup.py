@@ -1,6 +1,6 @@
 import io
 import esipysi
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with io.open("requirements.txt") as reader:
     install_requirements = [line.strip("\n") for line in reader]
@@ -19,7 +19,7 @@ setup(
     license = "MIT",
     keywords = "Esi Eve Python Api",
     url = "https://github.com/FlyingKiwiBird/EsiPysi",
-    packages=['esipysi'],
+    packages=find_packages(exclude=['*.tests.*']),
     install_requires=install_requirements,
     long_description=readme,
     classifiers=[

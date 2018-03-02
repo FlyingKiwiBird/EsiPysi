@@ -33,7 +33,9 @@ class EsiOp():
         self.__cached_seconds = operation.get("x-cached-seconds", -1)
         self.user_agent = kwargs.get("user_agent")
         self.cache = kwargs.get("cache")
+        auth_args = kwargs.get("auth")
         self.auth = None
+        self.set_auth(auth_args)
 
         self.use_cache = False
         if self.cache is not None:
@@ -99,6 +101,7 @@ class EsiOp():
             auth_code = self.auth.authorize()
             headers["Authorization"] = "Bearer {}".format(auth_code)
         #Call operation
+        print(url)
         if self.__verb == "get":
             r = requests.get(url, params=data_parameters, headers=headers)
         elif self.__verb == "post":

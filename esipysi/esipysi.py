@@ -20,6 +20,7 @@ class EsiPysi():
         :type swagger_url: String (url)
         :param: user_agent - the user agent that will be used for calls to ESI
         :param: cache - The optional EsiCache object to be used
+        :param: auth - the default auth to use
         """
         self.args = kwargs
 
