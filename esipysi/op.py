@@ -37,7 +37,7 @@ class EsiOp():
 
         self.use_cache = False
         if self.cache is not None:
-            if not issubclass(EsiCache, self.cache):
+            if not issubclass(EsiCache, type(self.cache)):
                 ValueError("cache should be of the type EsiCache")
             self.use_cache = True
 
@@ -48,7 +48,7 @@ class EsiOp():
         :param esiauth: An EsiAuth object which contains the authorization info
         :type esiauth: EsiAuth
         """
-        if not issubclass(EsiAuth, esiauth):
+        if not issubclass(EsiAuth, type(esiauth)):
             ValueError("esiauth should be of the type EsiAuth")
         
         self.auth = esiauth

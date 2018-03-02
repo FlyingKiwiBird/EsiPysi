@@ -10,5 +10,3 @@ class BasicTests(unittest.TestCase):
         result = op.execute({"categories" : "character", "search" : "Flying Kiwi Sertan"})
         self.assertEqual(result, {'character': [95095106]})
 
-if __name__ == '__main__':
-    unittest.main()

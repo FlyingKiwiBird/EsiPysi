@@ -1,5 +1,9 @@
 from .cache import EsiCache
-from redis import StrictRedis
+try:
+    from redis import StrictRedis
+except ImportError:
+    #Redis not installed
+    pass
 
 
 class RedisCache(EsiCache):
@@ -9,7 +13,7 @@ class RedisCache(EsiCache):
         :param redis_client: The redis client to store the cache in
         :type redis_client: StrictRedis
         """
-        if not issubclass(StrictRedis, redis_client):
+        if not issubclass(StrictRedis, type(redis_client)):
             raise ValueError("redis_client should be a StrictRedis object")
 
         self.redis = redis_client

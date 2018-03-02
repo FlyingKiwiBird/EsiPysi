@@ -25,7 +25,7 @@ class EsiPysi():
 
         cache = kwargs.get("cache")
         if cache is not None:
-            if not issubclass(EsiCache, cache):
+            if not issubclass(EsiCache, type(cache)):
                 ValueError("cache should be of the type EsiCache")
 
         self.operations = {}
