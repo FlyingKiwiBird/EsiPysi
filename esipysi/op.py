@@ -70,6 +70,7 @@ class EsiOp():
             if value is not None:
                 result = self.__get_value(value, raw)
                 if result is not None:
+                    logger.info("Result found in cache for {} : {}".format(self.__operation_id, parameters))
                     return result
 
 
@@ -101,7 +102,7 @@ class EsiOp():
             auth_code = self.auth.authorize()
             headers["Authorization"] = "Bearer {}".format(auth_code)
         #Call operation
-        logger.error("Calling '{}' with data '{}' using HTTP {}".format(url, data_parameters, self.__verb.upper()))
+        logger.info("Calling '{}' with data '{}' using HTTP {}".format(url, data_parameters, self.__verb.upper()))
 
         if self.__verb.lower() == "get":
             r = requests.get(url, params=data_parameters, headers=headers)
@@ -113,7 +114,9 @@ class EsiOp():
             r = requests.delete(url, data=data_parameters, headers=headers)
 
         if r.status_code != 200:
-            raise HTTPError(url, r.status_code, r.text, headers, None)
+            exception = HTTPError(url, r.status_code, r.text, headers, None)
+            logger.exception("ESI HTTP error occured: {}".format(exception))
+            raise exception
 
         if self.use_cache:
             self.cache.store(self.__operation_id, parameters, r.text, self.__cached_seconds)
