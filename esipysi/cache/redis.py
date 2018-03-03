@@ -34,8 +34,8 @@ class RedisCache(EsiCache):
     def retrieve(self, operation_id, operation_parameters, default=None):
         key = self.get_key(operation_id, operation_parameters)
 
-        value = pickle.loads(self.redis.get(key))
+        value = self.redis.get(key)
         if value is None:
             return default
-        return value
+        return pickle.loads(value)
 
