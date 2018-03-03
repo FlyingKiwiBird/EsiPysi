@@ -1,4 +1,5 @@
 from .cache import EsiCache
+import pickle
 try:
     from redis import StrictRedis
 except ImportError:
@@ -21,7 +22,7 @@ class RedisCache(EsiCache):
     def store(self, operation_id, operation_parameters, value, cache_time = -1):
         key = self.get_key(operation_id, operation_parameters)
 
-        self.redis.set(key, value)
+        self.redis.set(key, pickle.dumps(value))
         if cache_time != -1:
             self.redis.expire(key, cache_time)
 
@@ -33,7 +34,7 @@ class RedisCache(EsiCache):
     def retrieve(self, operation_id, operation_parameters, default=None):
         key = self.get_key(operation_id, operation_parameters)
 
-        value = self.redis.get(key)
+        value = pickle.loads(self.redis.get(key))
         if value is None:
             return default
         return value

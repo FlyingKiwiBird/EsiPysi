@@ -66,7 +66,8 @@ r = redis.StrictRedis(host='localhost', port=6379, db=0)
 Now create a RedisCache object and pass it to the EsiPysi object
 
 ```python
-from esipysy import RedisCache, EsiPysi
+from esipysy import EsiPysi
+from esipysy.cache import RedisCache
 cache = RedisCache(r)
 esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here", cache=cache)
 ```
