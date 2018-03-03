@@ -21,10 +21,9 @@ class RedisCache(EsiCache):
     def store(self, operation_id, operation_parameters, value, cache_time = -1):
         key = self.get_key(operation_id, operation_parameters)
 
-        if cache_time == -1:
-            self.redis.set(key, value)
-        else:
-            self.redis.setex(key, value, cache_time)
+        self.redis.set(key, value)
+        if cache_time != -1:
+            self.redis.expire(key, cache_time)
 
     def in_cache(self, operation_id, operation_parameters):
         key = self.get_key(operation_id, operation_parameters)
