@@ -7,7 +7,7 @@ except ImportError:
 
     pass
 
-__version__ = '0.2.7'
+__version__ = '0.2.8'
 __name__ = 'EsiPysi'
 
 import logging

@@ -1,4 +1,9 @@
 from abc import ABC, abstractmethod
+import pickle
+import hashlib
+import logging
+
+logger = logging.getLogger("EsiPysi")
 
 class EsiCache(ABC):
     """
@@ -62,5 +67,10 @@ class EsiCache(ABC):
         #Generate a key
         operation_dict = operation_parameters.copy()
         operation_dict["cache_operation_id"] = operation_id
-        key = hash(frozenset(operation_dict.items()))
+        key_set = frozenset(operation_dict.items())
+        hash = hashlib.md5()
+        key_pickle = pickle.dumps(key_set)
+        hash.update(key_pickle)
+        key = hash.hexdigest()
+        logger.info("hashed {} to {}".format(key_pickle, key)) #TODO: change to debug
         return key
