@@ -42,14 +42,14 @@ class EsiPysi():
         #Reformat json
         paths = data.get("paths", {})
         #each path
-        for path, verbs in paths.items():
+        for route, verbs in paths.items():
             #each http verb in a path
             for verb, operation in verbs.items():
                 operation_id = operation.get("operationId")
                 if operation_id is None:
                     continue
                 new_op = operation.copy()
-                new_op["path"] = path
+                new_op["path"] = route
                 new_op["verb"] = verb
 
                 #Handle parameter refs
