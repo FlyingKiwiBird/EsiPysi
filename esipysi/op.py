@@ -9,7 +9,7 @@ from .cache.cache import EsiCache
 from .auth import EsiAuth
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EsiPysi")
 
 class EsiOp():
     """ A class to handle operations of the ESI api """
@@ -102,7 +102,7 @@ class EsiOp():
             headers["Authorization"] = "Bearer {}".format(auth_code)
         #Call operation
         logger.error("Calling '{}' with data '{}' using HTTP {}".format(url, data_parameters, self.__verb.upper()))
-        
+
         if self.__verb.lower() == "get":
             r = requests.get(url, params=data_parameters, headers=headers)
         elif self.__verb.lower() == "post":
