@@ -72,5 +72,5 @@ class EsiCache(ABC):
         key_pickle = pickle.dumps(key_set)
         hash.update(key_pickle)
         key = hash.hexdigest()
-        logger.info("hashed {} to {}".format(key_pickle, key)) #TODO: change to debug
+        logger.debug("hashed {} to {}".format(key_pickle, key))
         return key
