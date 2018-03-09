@@ -11,7 +11,7 @@ import logging
 
 logger = logging.getLogger("EsiPysi")
 
-class EsiOp():
+class EsiOp(object):
     """ A class to handle operations of the ESI api """
     def __init__(self, operation, base_url, **kwargs):
         """
@@ -55,22 +55,37 @@ class EsiOp():
         
         self.auth = esiauth
 
-    def execute(self, parameters, raw=False):
+    def json(self, **kwargs):
         """
-        Call the ESI API and retrieve the data
+        Call the ESI API and retrieve the json data and decode as a dict
 
-        :param parameters: A key-value pair dict with the parameters for the API operation
-        :param raw: If True, return the raw text and do not parse into a dict
+        :param kwargs: Arguments of the API call
 
         :return: The API response
-        :rtype: dict (if raw is True, a string)
+        :rtype: dict
         """
+        return self.__execute(False, **kwargs)
+
+    def raw(self, **kwargs):
+        """
+        Call the ESI API and retrieve the raw result
+
+        :param kwargs: Arguments of the API call
+
+        :return: The API response
+        :rtype: string
+        """
+        return self.__execute(True, **kwargs)
+
+
+    def __execute(self, raw, **kwargs):
+
         if self.use_cache:
-            value = self.cache.retrieve(self.__operation_id, parameters)
+            value = self.cache.retrieve(self.__operation_id, kwargs)
             if value is not None:
                 result = self.__get_value(value, raw)
                 if result is not None:
-                    logger.info("Result found in cache for {} : {}".format(self.__operation_id, parameters))
+                    logger.info("Result found in cache for {} : {}".format(self.__operation_id, kwargs))
                     return result
 
 
@@ -79,12 +94,12 @@ class EsiOp():
         for name, param in self.__parameters.items():
             required = param.get("required", False)
             if required:
-                if name not in parameters:
+                if name not in kwargs:
                     raise ValueError("'{}' is a required parameter".format(name))
 
         data_parameters = {}
 
-        for key, value in parameters.items():
+        for key, value in kwargs.items():
             if key not in self.__parameters:
                 raise ValueError("'{}' is not a valid parameter".format(key))
             param_info = self.__parameters.get(key)
@@ -119,7 +134,7 @@ class EsiOp():
             raise exception
 
         if self.use_cache:
-            self.cache.store(self.__operation_id, parameters, r.text, self.__cached_seconds)
+            self.cache.store(self.__operation_id, kwargs, r.text, self.__cached_seconds)
         
         return self.__get_value(r.text, raw)
 

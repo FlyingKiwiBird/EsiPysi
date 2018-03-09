@@ -23,6 +23,8 @@ pip install git+git://github.com/FlyingKiwiBird/EsiPysi
 
 ## How to use
 
+Get familliar with the [ESI reference](https://esi.tech.ccp.is/latest/#/)
+
 start with an EsiPysi object, this will keep track of global settings like which Esi version to use (_latest is reccomended)
 
 ```python
@@ -31,7 +33,7 @@ from esipysi import EsiPysi
 esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here")
 ```
 
-Now from that object you can create operations, for more info on avaliable operations see [CCP's documentation](https://esi.tech.ccp.is/latest/)
+Now from that object you can create operations, pass the operation ID to the get_operation function
 
 ```python
 op = esi.get_operation("get_search")
@@ -49,7 +51,7 @@ op.set_auth(auth)
 And then you can execute that operation with parameters
 
 ```python
-result = op.execute({"categories" : "character", "search" : "Flying Kiwi Bird"})
+result = op.json(categories="character", search="Flying Kiwi Sertan")
 ```
 
 ### Caching

@@ -11,7 +11,7 @@ class CacheTests(unittest.TestCase):
         op_id = "get_search"
         data = {"categories" : "character", "search" : "Flying Kiwi Sertan"}
         op = esi.get_operation(op_id)
-        result = op.execute(data)
+        result = op.json(**data)
 
         self.assertTrue(cache.in_cache(op_id, data))
 

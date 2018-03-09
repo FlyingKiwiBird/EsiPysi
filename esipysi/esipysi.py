@@ -7,7 +7,7 @@ import logging
 
 logger = logging.getLogger("EsiPysi")
 
-class EsiPysi():
+class EsiPysi(object):
     """
     The EsiPysi class creates "EsiOp" operations based on a provided swagger spec
     """

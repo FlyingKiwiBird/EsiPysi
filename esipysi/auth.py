@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger("EsiPysi")
 
-class EsiAuth():
+class EsiAuth(object):
 
     """
     Keeps track of authorization information, pass to an EsiOp to authorize
