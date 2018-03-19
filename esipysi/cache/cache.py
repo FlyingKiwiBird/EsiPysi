@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import pickle
 import hashlib
 import logging
+import esipysi
 
 logger = logging.getLogger("EsiPysi")
 
@@ -65,9 +66,13 @@ class EsiCache(ABC):
         :return: The key generated to store the value in the cache
         """
         #Generate a key
-        operation_dict = operation_parameters.copy()
-        operation_dict["cache_operation_id"] = operation_id
-        key_set = frozenset(operation_dict.items())
+        hash_dict = {}
+        hash_dict["cache_operation_id"] = operation_id
+        hash_dict["esipysi_version"] = esipysi.__version__
+        for key, value in operation_parameters.items():
+            hash_dict[key] = pickle.dumps(value)
+
+        key_set = frozenset(hash_dict.items())
         hash = hashlib.md5()
         key_pickle = pickle.dumps(key_set)
         hash.update(key_pickle)

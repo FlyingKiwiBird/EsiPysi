@@ -15,4 +15,14 @@ class CacheTests(unittest.TestCase):
 
         self.assertTrue(cache.in_cache(op_id, data))
 
+    def test_cached_list_op(self):
+        cache = MockCache()
+        esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test", cache=cache)
+        op_id = "post_universe_names"
+        data = {"ids":[30000142, 30002693]}
+        op = esi.get_operation(op_id)
+        result = op.json(**data)
+
+        self.assertTrue(cache.in_cache(op_id, data))
+
         
