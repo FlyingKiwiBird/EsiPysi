@@ -7,6 +7,7 @@ from urllib.error import HTTPError
 from json.decoder import JSONDecodeError
 from .cache.cache import EsiCache
 from .auth import EsiAuth
+from urllib.parse import urlencode
 import logging
 
 logger = logging.getLogger("EsiPysi")
@@ -97,36 +98,49 @@ class EsiOp(object):
                 if name not in kwargs:
                     raise ValueError("'{}' is a required parameter".format(name))
 
-        data_parameters = {}
+        body = None
+        query_parameters = {}
+        headers = {}
 
         for key, value in kwargs.items():
             if key not in self.__parameters:
                 raise ValueError("'{}' is not a valid parameter".format(key))
             param_info = self.__parameters.get(key)
             #Handle path parameters
-            if param_info.get("in") == "path":
+            param_type = param_info.get("in")
+            if param_type == "path":
                 escaped_value = urllib.parse.quote(str(value))
                 url = url.replace("{" + param_info.get("name") + "}", escaped_value)
-            else:
-                data_parameters[key] = value
+            elif param_type == "query":
+                query_parameters[key] = value
+            elif param_type == "header":
+                headers[key] = value
+            elif param_type == "body":
+                body = json.dumps(value)
 
-        headers = {}
         if self.user_agent is not None:
             headers['User-Agent'] = self.user_agent
         if self.auth is not None:
             auth_code = self.auth.authorize()
             headers["Authorization"] = "Bearer {}".format(auth_code)
         #Call operation
-        logger.info("Calling '{}' with data '{}' using HTTP {}".format(url, data_parameters, self.__verb.upper()))
+        logger.info("Calling '{}' with data '{}' using HTTP {}".format(url, body, self.__verb.upper()))
 
         if self.__verb.lower() == "get":
-            r = requests.get(url, params=data_parameters, headers=headers)
-        elif self.__verb.lower() == "post":
-            r = requests.post(url, data=data_parameters, headers=headers)
-        elif self.__verb.lower() == "put":
-            r = requests.put(url, data=data_parameters, headers=headers)
-        elif self.__verb.lower() == "delete":
-            r = requests.delete(url, data=data_parameters, headers=headers)
+            r = requests.get(url, params=query_parameters, headers=headers)
+        else:
+            #After this I don't know WTF CCP was thinking
+            if query_parameters:
+                query_str = "?" + urlencode(query_parameters)
+            else:
+                query_str = ""
+            full_url = url + query_str
+            if self.__verb.lower() == "post":
+                r = requests.post(full_url, data=body, headers=headers)
+            elif self.__verb.lower() == "put":
+                r = requests.put(full_url, data=body, headers=headers)
+            elif self.__verb.lower() == "delete":
+                r = requests.delete(full_url, data=body, headers=headers)
 
         if r.status_code != 200:
             exception = HTTPError(url, r.status_code, r.text, headers, None)
