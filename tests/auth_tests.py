@@ -20,3 +20,9 @@ class AuthTests(unittest.TestCase):
         auth = EsiAuth(ai.client_id, ai.client_secret, ai.access_token, ai.refresh_token,  datetime.datetime(1970,1,1))
         result = auth.verify()
         print(result)
+
+    def test_auth_verify_refresh_only(self):
+        ai = AuthInfo()
+        auth = EsiAuth.from_refresh_token(ai.client_id, ai.client_secret, ai.refresh_token)
+        result = auth.verify()
+        print(result)

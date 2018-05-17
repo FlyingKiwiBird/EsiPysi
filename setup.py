@@ -2,13 +2,11 @@ import io
 import esipysi
 from setuptools import setup, find_packages
 
-with io.open("requirements.txt") as reader:
-    install_requirements = [line.strip("\n") for line in reader]
-
-with io.open('readme.md') as reader:
-    readme = reader.read()
-
-
+try:
+    with io.open('readme.md') as reader:
+        readme = reader.read()
+except:
+    readme = ""
 
 setup(
     name = "EsiPysi",
@@ -19,8 +17,11 @@ setup(
     license = "MIT",
     keywords = "Esi Eve Python Api",
     url = "https://github.com/FlyingKiwiBird/EsiPysi",
-    packages=find_packages(exclude=['*.tests.*']),
-    install_requires=install_requirements,
+    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
+    install_requires=[
+        "requests",
+        "redis"
+    ],
     long_description=readme,
     classifiers=[
         "Development Status :: 3 - Alpha",

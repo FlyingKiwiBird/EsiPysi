@@ -36,6 +36,18 @@ class EsiAuth(object):
         b64_encoded_key = base64.b64encode(key_secret)
         self.basic_auth = b64_encoded_key.decode('ascii')
 
+    @classmethod
+    def from_authorization_code(cls, client_id, client_secret, authorization_code, login_server="login.eveonline.com"):
+        esi_auth = cls(client_id, client_secret, None, None, None, login_server)
+        esi_auth.get_new_token(authorization_code)
+        return esi_auth
+
+    @classmethod 
+    def from_refresh_token(cls, client_id, client_secret, refresh_token, login_server="login.eveonline.com"):
+        esi_auth = cls(client_id, client_secret, None, refresh_token, None, login_server)
+        esi_auth.get_new_token()
+        return esi_auth
+
     def authorize(self):
         """
         Returns the access token to be used in authorizations.  This function is reccomended over 
@@ -57,16 +69,24 @@ class EsiAuth(object):
         :return: The validity of the access token
         :rtype: boolean
         """
+        if self.expires_at is None:
+            return True
         offset_delta = datetime.timedelta(seconds=offset)
         return (self.expires_at + offset_delta) <= datetime.datetime.utcnow()
 
-    def get_new_token(self):
+    def get_new_token(self, authorization_code = None):
         """
-        Acquire a new token using the provided refresh token
-        """
+        Acquire a new token using the refresh token or provided authorization_code
+        """    
+        if self.refresh_token is not None:
+            data = {"grant_type":"refresh_token","refresh_token": self.refresh_token}
+        elif authorization_code is not None:
+            data = {"grant_type":"authorization_code","code": authorization_code}
+        else:
+            raise ValueError("Either refresh_token or authorization_code is required")
+
         url = "https://" + self.__login_server + "/oauth/token"
         headers = {"Authorization" : "Basic {}".format(self.basic_auth), "Content-Type": "application/x-www-form-urlencoded"}
-        data = {"grant_type":"refresh_token","refresh_token": self.refresh_token}
         r = requests.post(url, headers=headers, data=data)
 
         if r.status_code != 200:

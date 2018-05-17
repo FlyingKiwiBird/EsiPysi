@@ -23,7 +23,7 @@ pip install git+git://github.com/FlyingKiwiBird/EsiPysi
 
 ## How to use
 
-Get familliar with the [ESI reference](https://esi.tech.ccp.is/latest/#/)
+Get familliar with the [ESI reference](https://esi.tech.ccp.is/latest/#/) and [Eve SSO](http://eveonline-third-party-documentation.readthedocs.io/en/latest/sso/authentication.html)
 
 start with an EsiPysi object, this will keep track of global settings like which Esi version to use (_latest is reccomended)
 
@@ -41,10 +41,20 @@ op = esi.get_operation("get_search")
 
 If it requires authorization you can use EsiAuth
 
+You can either get one from your client info, access token, refresh token, and expire datetime (in UTC)
 ```python
 from esipysi import EsiAuth
 
 auth = EsiAuth(CLIENT_ID, CLIENT_SECRET, ACCESS_TOKEN, REFRESH_TOKEN, EXPIRES_AT)
+op.set_auth(auth)
+```
+
+Or you can get it from less data such as an authorization code you got back from the callback or just a refresh token:
+```python
+from esipysi import EsiAuth
+
+auth = EsiAuth.from_authorization_code(CLIENT_ID, CLIENT_SECRET, AUTHORIZATION_CODE)
+auth = EsiAuth.from_refresh_token(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN)
 op.set_auth(auth)
 ```
 
