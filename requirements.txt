@@ -1,2 +1,4 @@
+aiohttp
+aiodns
 requests
 redis

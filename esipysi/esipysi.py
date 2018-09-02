@@ -1,3 +1,5 @@
+import asyncio
+import aiohttp
 import requests
 import json
 from .op import EsiOp
@@ -15,32 +17,42 @@ class EsiPysi(object):
     def __init__(self, swagger_url, **kwargs):
         """
         Initialize the class
-        
-        :param swagger_url: URL to the swagger spec json
-        :type swagger_url: String (url)
-        :param: user_agent - the user agent that will be used for calls to ESI
-        :param: cache - The optional EsiCache object to be used
-        :param: auth - the default auth to use
+
+        Arguments:
+            swagger_url -- Url to the swagger spec
+
+        Keyword arguments:
+            user_agent -- user agent to send with ESI calls
+            cache -- EsiCache object to use for caching
+            auth -- EsiAuth to use for authorized calls to ESI
+            loop -- Event loop to use for asyncio
         """
         self.args = kwargs
+        self.__is_ready = False
+        self.__loading = False
 
         cache = kwargs.get("cache")
         if cache is not None:
             if not issubclass(EsiCache, type(cache)):
-                ValueError("cache should be of the type EsiCache")
+                TypeError("cache should be of the type EsiCache")
 
         self.operations = {}
         self.data = {}
-
+        
         r = requests.get(swagger_url)
         data = r.json()
+            
         self.data = data
+        self.__analyze_swagger()
+        self.__is_ready = True
 
+
+    def __analyze_swagger(self):
         #Get base url
-        self.base_url = "https://" + data.get("host","") + data.get("basePath", "")
+        self.base_url = "https://" + self.data.get("host","") + self.data.get("basePath", "")
 
         #Reformat json
-        paths = data.get("paths", {})
+        paths = self.data.get("paths", {})
         #each path
         for route, verbs in paths.items():
             #each http verb in a path
@@ -64,7 +76,7 @@ class EsiPysi(object):
                     param_name = param_details.get("name")
                     new_op["parameters"][param_name] = param_details
 
-                self.operations [operation_id] = new_op
+                self.operations[operation_id] = new_op
 
     def __get_ref(self, path):
         path_split = path.split("/")

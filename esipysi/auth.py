@@ -1,4 +1,6 @@
 import datetime
+import asyncio
+import aiohttp
 import requests
 import base64
 from urllib.error import HTTPError
@@ -11,7 +13,7 @@ class EsiAuth(object):
     """
     Keeps track of authorization information, pass to an EsiOp to authorize
     """
-    def __init__(self, client_id, client_secret, access_token, refresh_token, expires_at, login_server="login.eveonline.com"):
+    def __init__(self, client_id, client_secret, access_token, refresh_token, expires_at, login_server="login.eveonline.com", loop=None):
         """
         Sets up the authorization
 
@@ -29,6 +31,13 @@ class EsiAuth(object):
         self.access_token = access_token
         self.refresh_token = refresh_token
         self.expires_at = expires_at
+        if loop is None:
+            self.loop = None
+        else:
+            if isinstance(loop, asyncio.BaseEventLoop):
+               self.loop = loop
+            else:
+                raise TypeError("Loop argument must either be 'None' or impliment BaseEventLoop") 
 
         self.__login_server = login_server
 
@@ -37,18 +46,18 @@ class EsiAuth(object):
         self.basic_auth = b64_encoded_key.decode('ascii')
 
     @classmethod
-    def from_authorization_code(cls, client_id, client_secret, authorization_code, login_server="login.eveonline.com"):
+    async def from_authorization_code(cls, client_id, client_secret, authorization_code, login_server="login.eveonline.com"):
         esi_auth = cls(client_id, client_secret, None, None, None, login_server)
-        esi_auth.get_new_token(authorization_code)
+        await esi_auth.get_new_token(authorization_code)
         return esi_auth
 
     @classmethod 
-    def from_refresh_token(cls, client_id, client_secret, refresh_token, login_server="login.eveonline.com"):
+    async def from_refresh_token(cls, client_id, client_secret, refresh_token, login_server="login.eveonline.com"):
         esi_auth = cls(client_id, client_secret, None, refresh_token, None, login_server)
-        esi_auth.get_new_token()
+        await esi_auth.get_new_token()
         return esi_auth
 
-    def authorize(self):
+    async def authorize(self):
         """
         Returns the access token to be used in authorizations.  This function is reccomended over 
         getting the access token from the properties because it checks if the token is expired.
@@ -56,7 +65,7 @@ class EsiAuth(object):
         :return: a string that is the access token 
         """
         if(self.is_expired()):
-            self.get_new_token()
+            await self.get_new_token()
         return self.access_token
 
     def is_expired(self, offset=0):
@@ -74,7 +83,7 @@ class EsiAuth(object):
         offset_delta = datetime.timedelta(seconds=offset)
         return (self.expires_at + offset_delta) <= datetime.datetime.utcnow()
 
-    def get_new_token(self, authorization_code = None):
+    async def get_new_token(self, authorization_code = None):
         """
         Acquire a new token using the refresh token or provided authorization_code
         """    
@@ -87,18 +96,21 @@ class EsiAuth(object):
 
         url = "https://" + self.__login_server + "/oauth/token"
         headers = {"Authorization" : "Basic {}".format(self.basic_auth), "Content-Type": "application/x-www-form-urlencoded"}
-        r = requests.post(url, headers=headers, data=data)
 
-        if r.status_code != 200:
-            raise HTTPError(url, r.status_code, r.text, headers, None)
 
-        result = r.json()
-        self.access_token = result.get("access_token")
-        self.refresh_token = result.get("refresh_token") #*Should* be the same but let's grab it anyway
-        expires_in = int(result.get("expires_in", "0"))
-        self.expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds = expires_in)
+        async with aiohttp.ClientSession(loop=self.loop) as session:
+            async with session.post(url, headers=headers, data=data) as resp:
+                text = await resp.text()
+                if resp.status >= 400:
+                    raise HTTPError(url, resp.status, text, headers, None)
 
-    def verify(self, raw = False):
+                result = await resp.json()
+                self.access_token = result.get("access_token")
+                self.refresh_token = result.get("refresh_token") #*Should* be the same but let's grab it anyway
+                expires_in = int(result.get("expires_in", "0"))
+                self.expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds = expires_in)
+
+    async def verify(self, raw = False):
         """
         Retrieve details about the authorized user / token
         :param raw: If True, return the raw text and do not parse into a dict
@@ -108,17 +120,17 @@ class EsiAuth(object):
         """
 
         url = "https://" + self.__login_server + "/oauth/verify"
-        auth = self.authorize()
+        auth = await self.authorize()
         headers = {"Authorization" : "Bearer {}".format(auth)}
-        r = requests.get(url, headers=headers)
+        async with aiohttp.ClientSession(loop=self.loop) as session:
+            async with session.get(url, headers=headers) as resp:
+                text = await resp.text()
+                if resp.status >= 400:
+                    raise HTTPError(url, resp.status, text, headers, None)
 
-        if r.status_code != 200:
-            print(r.text)
-            raise HTTPError(url, r.status_code, r.text, headers, None)
-
-        if raw:
-            return r.text
-        return r.json()
+                if raw:
+                    return text
+                return await resp.json()
         
 
 

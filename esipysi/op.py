@@ -1,5 +1,6 @@
+import asyncio
+import aiohttp
 
-import requests
 import re
 import urllib
 import json
@@ -18,12 +19,15 @@ class EsiOp(object):
         """
         Initialize the class - this should only be done through an EsiPysi class object
 
-        :param operation: A dict with the modified swagger structure that defines the operation
-        :type operation: dict
-        :param base_url: url to the base endpoint
-        :type base_url: string (url)
-        :param: user_agent - User agent to use when interacting with ESI
-        :param: cache - EsiCache to use
+        Arguments:
+            session -- A ClientSession from aiohttp used to make ESI calls
+            operation -- A dict with the modified swagger structure that defines the operation
+            base_url -- url to the base endpoint
+        Keyword arguments:
+            user_agent -- User agent to use when interacting with ESI
+            cache -- an EsiCache object to use for caching queries
+            auth -- an EsiAuth object to use for authorizing the ESI call
+            loop -- A asyncio event loop to use for async calls
         """
         self.__operation = operation
         self.__path = operation.get("path")
@@ -35,8 +39,15 @@ class EsiOp(object):
         self.user_agent = kwargs.get("user_agent")
         self.cache = kwargs.get("cache")
         auth_args = kwargs.get("auth")
-        self.auth = None
+        self.__auth = None
         self.set_auth(auth_args)
+
+        self.__loop = kwargs.get("loop")
+        self.__use_loop = True
+        if self.__loop is None:
+            self.__use_loop = False
+        elif not isinstance(self.__loop, asyncio.BaseEventLoop):
+            raise TypeError("loop must be a asyncio event loop")
 
         self.use_cache = False
         if self.cache is not None:
@@ -48,15 +59,15 @@ class EsiOp(object):
         """
         Set the authorization for this operation
 
-        :param esiauth: An EsiAuth object which contains the authorization info
-        :type esiauth: EsiAuth
+        Arguments:
+            esiauth -- An EsiAuth object which contains the authorization info
         """
         if not issubclass(EsiAuth, type(esiauth)):
             ValueError("esiauth should be of the type EsiAuth")
         
         self.auth = esiauth
 
-    def json(self, **kwargs):
+    async def json(self, **kwargs):
         """
         Call the ESI API and retrieve the json data and decode as a dict
 
@@ -65,9 +76,9 @@ class EsiOp(object):
         :return: The API response
         :rtype: dict
         """
-        return self.__execute(False, **kwargs)
+        return await self.__call_esi_async(False, **kwargs)
 
-    def raw(self, **kwargs):
+    async def raw(self, **kwargs):
         """
         Call the ESI API and retrieve the raw result
 
@@ -76,19 +87,22 @@ class EsiOp(object):
         :return: The API response
         :rtype: string
         """
-        return self.__execute(True, **kwargs)
+        return await self.__call_esi_async(True, **kwargs)
 
+    async def __call_esi_async(self, raw, **kwargs):
+        if self.__loop is None:
+            async with aiohttp.ClientSession() as session:
+                return await self.__execute(session, raw, **kwargs)
+        else:
+            async with aiohttp.ClientSession(loop = self.__loop) as session:
+                return await self.__execute(session, raw, **kwargs)
+        
 
-    def __execute(self, raw, **kwargs):
+    async def __execute(self, session, raw, **kwargs):
 
-        if self.use_cache:
-            value = self.cache.retrieve(self.__operation_id, kwargs)
-            if value is not None:
-                result = self.__get_value(value, raw)
-                if result is not None:
-                    logger.info("Result found in cache for {} : {}".format(self.__operation_id, kwargs))
-                    return result
-
+        cache_value = self.__cache_read(raw, **kwargs)
+        if cache_value is not None:
+            return cache_value
 
         url = self.__base_url + self.__path
         #Handle parameters
@@ -121,13 +135,14 @@ class EsiOp(object):
         if self.user_agent is not None:
             headers['User-Agent'] = self.user_agent
         if self.auth is not None:
-            auth_code = self.auth.authorize()
+            auth_code = await self.auth.authorize()
             headers["Authorization"] = "Bearer {}".format(auth_code)
         #Call operation
         logger.info("Calling '{}' with data '{}' using HTTP {}".format(url, body, self.__verb.upper()))
 
         if self.__verb.lower() == "get":
-            r = requests.get(url, params=query_parameters, headers=headers)
+            async with session.get(url, params=query_parameters, headers=headers) as resp:
+                return await self.__process_response(resp, raw, **kwargs)
         else:
             #After this I don't know WTF CCP was thinking
             if query_parameters:
@@ -136,30 +151,51 @@ class EsiOp(object):
                 query_str = ""
             full_url = url + query_str
             if self.__verb.lower() == "post":
-                r = requests.post(full_url, data=body, headers=headers)
+                async with session.post(full_url, data=body, headers=headers) as resp:
+                    return await self.__process_response(resp, raw, **kwargs)
             elif self.__verb.lower() == "put":
-                r = requests.put(full_url, data=body, headers=headers)
+                async with session.put(full_url, data=body, headers=headers) as resp:
+                    return await self.__process_response(resp, raw, **kwargs)
             elif self.__verb.lower() == "delete":
-                r = requests.delete(full_url, data=body, headers=headers)
-
-        if r.status_code != 200:
-            exception = HTTPError(url, r.status_code, r.text, headers, None)
+                async with session.delete(full_url, data=body, headers=headers) as resp:
+                    return await self.__process_response(resp, raw, **kwargs)
+        
+    async def __process_response(self, resp, raw, **kwargs):
+        text = await resp.text()
+        if resp.status >= 400:
+            exception = HTTPError(resp.url, resp.status, text, resp.headers, None)
             logger.exception("ESI HTTP error occured: {}".format(exception))
             raise exception
 
         if self.use_cache:
-            self.cache.store(self.__operation_id, kwargs, r.text, self.__cached_seconds)
-        
-        return self.__get_value(r.text, raw)
+            self.cache.store(self.__operation_id, kwargs, text, self.__cached_seconds)
 
-    def __get_value(self, text, raw):
         if raw:
             return text
+
         try:
-            json_data = json.loads(text)
-        except JSONDecodeError:
+            return await resp.json()
+        except Exception:
+            logger.exception("Could not parse JSON")
             return None
-        return json_data
+
+    def __cache_read(self, raw, **kwargs):
+        if not self.use_cache:
+            return None
+        
+        value = self.cache.retrieve(self.__operation_id, kwargs)
+        result = None
+        if value is not None:
+            if raw:
+                result = value
+            else:
+                try:
+                    result = json.loads(value)
+                except Exception:
+                    logger.exception("Could not parse JSON")
+            if result is not None:
+                logger.info("Result found in cache for {} : {}".format(self.__operation_id, kwargs))
+        return result
 
 
     def __str__(self):
