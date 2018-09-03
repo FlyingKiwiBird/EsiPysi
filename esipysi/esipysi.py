@@ -92,11 +92,9 @@ class EsiPysi(object):
     def get_operation(self, operation_id):
         """
         Get an ESI operation from it's id
-        
-        :param operation_id: The operation id of the API call (e.g. "get_alliances_alliance_id")
 
-        :return: An EsiOp which is used to interact with the ESI API
-        :rtype: EsiOp
+        Arguments:
+            operation_id -- The id of the swagger operation
         """
         operation = self.operations.get(operation_id)
         if operation is None:

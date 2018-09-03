@@ -71,10 +71,8 @@ class EsiOp(object):
         """
         Call the ESI API and retrieve the json data and decode as a dict
 
-        :param kwargs: Arguments of the API call
-
-        :return: The API response
-        :rtype: dict
+        Keyword arguments:
+            Arguments from the ESI call
         """
         return await self.__call_esi_async(False, **kwargs)
 
@@ -82,10 +80,8 @@ class EsiOp(object):
         """
         Call the ESI API and retrieve the raw result
 
-        :param kwargs: Arguments of the API call
-
-        :return: The API response
-        :rtype: string
+        Keyword arguments:
+            Arguments from the ESI call
         """
         return await self.__call_esi_async(True, **kwargs)
 

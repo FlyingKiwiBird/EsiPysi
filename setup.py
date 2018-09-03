@@ -19,6 +19,8 @@ setup(
     url = "https://github.com/FlyingKiwiBird/EsiPysi",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=[
+        "aiohttp",
+        "aiodns",
         "requests",
         "redis"
     ],

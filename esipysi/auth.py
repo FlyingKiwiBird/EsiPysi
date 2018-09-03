@@ -17,14 +17,14 @@ class EsiAuth(object):
         """
         Sets up the authorization
 
-        :param client_id: Eve 3rd party app client id
-        :param client_secret: Eve 3rd part app client secret
-        :param access_token: Access token from Eve SSO
-        :param refrest_token: Refresh token from Eve SSO
-        :param expires_at: When the token expires in UTC (Note: You will need to convert this to a datetime from the seconds CCP provides)
-        :type expires_at: datetime
-        :param login_server: (optional) change the login server from the default server
-        :type login_server: string (url)
+        Arguments:
+            client_id -- Eve 3rd party developer client id
+            client_secret -- The secret key to go with the client_id
+            access_token -- Access token from Eve SSO
+            refresh_token -- Refresh token from Eve SSO
+            expires_at -- a UTC datetime of when the access token will expire
+            login_server -- The Eve SSO login server (defaults to tranquility login server)
+            loop -- An asyncio loop for esi calls (defaults to the current loop)
         """
         self.client_id = client_id
         self.client_secret = client_secret
@@ -62,7 +62,8 @@ class EsiAuth(object):
         Returns the access token to be used in authorizations.  This function is reccomended over 
         getting the access token from the properties because it checks if the token is expired.
 
-        :return: a string that is the access token 
+        Returns:
+            Access token to ESI
         """
         if(self.is_expired()):
             await self.get_new_token()
@@ -72,11 +73,11 @@ class EsiAuth(object):
         """
         Determines if the access token is expired
 
-        :param offset: offset in seconds to test (e.g. if you want to know if the token will be valid in 30 seconds, offset=30)
-        :type offset: int (seconds)
-
-        :return: The validity of the access token
-        :rtype: boolean
+        Arguments:
+            offset -- seconds to shift the check, e.g. with an offset of 30 if the token is still valid for 29 seconds the check will fail (default: 0)
+        
+        Returns:
+            True if token is valid, False otherwise
         """
         if self.expires_at is None:
             return True
@@ -86,6 +87,9 @@ class EsiAuth(object):
     async def get_new_token(self, authorization_code = None):
         """
         Acquire a new token using the refresh token or provided authorization_code
+
+        Arguments:
+            authorization_code -- The code from the Authorization Code Grant of Eve SSO, only required if a refresh token is not avaliable (default: None)
         """    
         if self.refresh_token is not None:
             data = {"grant_type":"refresh_token","refresh_token": self.refresh_token}
@@ -113,10 +117,12 @@ class EsiAuth(object):
     async def verify(self, raw = False):
         """
         Retrieve details about the authorized user / token
-        :param raw: If True, return the raw text and do not parse into a dict
+        
+        Arguments:
+            raw -- Output directly as text instead of parsing the JSON
 
-        :return: Details about the authorized user / token
-        :rtype: dict (if raw is True, a string)
+        Returns:
+            Results of the verify SSO call
         """
 
         url = "https://" + self.__login_server + "/oauth/verify"

@@ -7,8 +7,8 @@ to create a lightweight and fast tool which makes devloping with Esi easier.
 
 * Auth storage and auto refreshing
     * If your access token expires, EsiPysi will acquire a new one
-* Fast API calling and JSON parsing using [requests](https://github.com/requests/requests)
-    * Uses the popular requests package for calling APIs and parsing the JSON response
+* Fast API calling and JSON parsing using [aiohttp](https://aiohttp.readthedocs.io/en/stable/)
+    * Uses asyncio and event loops so that the API calls are non-blocking
 * Light input validation
     *  Only validates that the parameters are in the Esi Swagger Spec, does not validate types/values
 * Caching using Redis
@@ -18,8 +18,10 @@ to create a lightweight and fast tool which makes devloping with Esi easier.
 Install with pip:
 
 ```
-pip install git+git://github.com/FlyingKiwiBird/EsiPysi
+pip install EsiPysi
 ```
+
+Requires python 3.5+
 
 ## How to use
 
@@ -36,7 +38,7 @@ esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquili
 Now from that object you can create operations, pass the operation ID to the get_operation function
 
 ```python
-op = esi.get_operation("get_search")
+op = await esi.get_operation("get_search")
 ```
 
 If it requires authorization you can use EsiAuth
@@ -53,15 +55,15 @@ Or you can get it from less data such as an authorization code you got back from
 ```python
 from esipysi import EsiAuth
 
-auth = EsiAuth.from_authorization_code(CLIENT_ID, CLIENT_SECRET, AUTHORIZATION_CODE)
-auth = EsiAuth.from_refresh_token(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN)
+auth = await EsiAuth.from_authorization_code(CLIENT_ID, CLIENT_SECRET, AUTHORIZATION_CODE)
+auth = await EsiAuth.from_refresh_token(CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN)
 op.set_auth(auth)
 ```
 
 And then you can execute that operation with parameters
 
 ```python
-result = op.json(categories="character", search="Flying Kiwi Sertan")
+result = await op.json(categories="character", search="Flying Kiwi Sertan")
 ```
 
 ### Caching
