@@ -66,6 +66,14 @@ And then you can execute that operation with parameters
 result = await op.json(categories="character", search="Flying Kiwi Sertan")
 ```
 
+### Response types
+
+EsiPysi allows you to get the response from Esi in a variety of ways:
+
+* ```operation.json()``` - return the result as a dict parsed from JSON
+* ```operation.text()``` - return the result as plain text
+* ```operation.response()``` - return a [aiohttp.ClientResponse](https://docs.aiohttp.org/en/stable/client_reference.html#aiohttp.ClientResponse) object
+
 ### Caching
 
 EsiPysi has caching provided by redis.  First create a redis client.
