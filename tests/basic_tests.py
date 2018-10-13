@@ -19,5 +19,21 @@ class BasicTests(unittest.TestCase):
         result = loop.run_until_complete(op.json(ids=[30000142, 30002693]))
         #print(result)
 
+    def test_text_op(self):
+        esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test")
+        op = esi.get_operation("get_search")
+        loop = asyncio.get_event_loop()
+        result = loop.run_until_complete(op.text(categories="character", search="Flying Kiwi Sertan"))
+        self.assertEqual(result, "{\"character\":[95095106]}")
+
+    def test_response_op(self):
+        esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test")
+        op = esi.get_operation("get_search")
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(op.response(categories="character", search="Flying Kiwi Sertan"))
+        text = loop.run_until_complete(response.json())
+        self.assertEqual(text, {'character': [95095106]})
+
+
 
     

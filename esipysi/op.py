@@ -1,14 +1,16 @@
 import asyncio
 import aiohttp
-
 import re
 import urllib
 import json
+from enum import Enum 
+from urllib.parse import urlencode
 from urllib.error import HTTPError
 from json.decoder import JSONDecodeError
+
 from .cache.cache import EsiCache
 from .auth import EsiAuth
-from urllib.parse import urlencode
+
 import logging
 
 logger = logging.getLogger("EsiPysi")
@@ -74,29 +76,48 @@ class EsiOp(object):
         Keyword arguments:
             Arguments from the ESI call
         """
-        return await self.__call_esi_async(False, **kwargs)
+        return await self.__call_esi_async(ResponseType.Json, **kwargs)
 
-    async def raw(self, **kwargs):
+    async def text(self, **kwargs):
         """
-        Call the ESI API and retrieve the raw result
+        Call the ESI API and retrieve the result as plain text (string)
 
         Keyword arguments:
             Arguments from the ESI call
         """
-        return await self.__call_esi_async(True, **kwargs)
+        return await self.__call_esi_async(ResponseType.Text, **kwargs)
 
-    async def __call_esi_async(self, raw, **kwargs):
+    async def raw(self, **kwargs):
+        """
+        Call the ESI API and retrieve the result as plain text (string)
+        This is a legacy call to not break applications that used EsiPysi pre 0.6, use "text" instead
+
+        Keyword arguments:
+            Arguments from the ESI call
+        """
+        return await self.__call_esi_async(ResponseType.Text, **kwargs)
+
+    async def response(self, **kwargs):
+        """
+        Call the ESI API and retrieve the result as an AioHttp ClientResponse object
+
+        Keyword arguments:
+            Arguments from the ESI call
+        """
+        return await self.__call_esi_async(ResponseType.AiohttpResponse, **kwargs)
+
+    async def __call_esi_async(self, resp_type, **kwargs):
         if self.__loop is None:
             async with aiohttp.ClientSession() as session:
-                return await self.__execute(session, raw, **kwargs)
+                return await self.__execute(session, resp_type, **kwargs)
         else:
             async with aiohttp.ClientSession(loop = self.__loop) as session:
-                return await self.__execute(session, raw, **kwargs)
+                return await self.__execute(session, resp_type, **kwargs)
         
 
-    async def __execute(self, session, raw, **kwargs):
+    async def __execute(self, session, resp_type, **kwargs):
 
-        cache_value = self.__cache_read(raw, **kwargs)
+        cache_value = await self.__cache_read(resp_type, **kwargs)
         if cache_value is not None:
             return cache_value
 
@@ -138,7 +159,7 @@ class EsiOp(object):
 
         if self.__verb.lower() == "get":
             async with session.get(url, params=query_parameters, headers=headers) as resp:
-                return await self.__process_response(resp, raw, **kwargs)
+                return await self.__process_response(resp, resp_type, **kwargs)
         else:
             #After this I don't know WTF CCP was thinking
             if query_parameters:
@@ -148,15 +169,15 @@ class EsiOp(object):
             full_url = url + query_str
             if self.__verb.lower() == "post":
                 async with session.post(full_url, data=body, headers=headers) as resp:
-                    return await self.__process_response(resp, raw, **kwargs)
+                    return await self.__process_response(resp, resp_type, **kwargs)
             elif self.__verb.lower() == "put":
                 async with session.put(full_url, data=body, headers=headers) as resp:
-                    return await self.__process_response(resp, raw, **kwargs)
+                    return await self.__process_response(resp, resp_type, **kwargs)
             elif self.__verb.lower() == "delete":
                 async with session.delete(full_url, data=body, headers=headers) as resp:
-                    return await self.__process_response(resp, raw, **kwargs)
+                    return await self.__process_response(resp, resp_type, **kwargs)
         
-    async def __process_response(self, resp, raw, **kwargs):
+    async def __process_response(self, resp, resp_type, **kwargs):
         text = await resp.text()
         if resp.status >= 400:
             exception = HTTPError(resp.url, resp.status, text, resp.headers, None)
@@ -164,9 +185,12 @@ class EsiOp(object):
             raise exception
 
         if self.use_cache:
-            self.cache.store(self.__operation_id, kwargs, text, self.__cached_seconds)
+            self.cache.store(self.__operation_id, kwargs, resp, self.__cached_seconds)
 
-        if raw:
+        if resp_type == ResponseType.AiohttpResponse:
+            return resp
+
+        if resp_type == ResponseType.Text:
             return text
 
         try:
@@ -175,20 +199,24 @@ class EsiOp(object):
             logger.exception("Could not parse JSON")
             return None
 
-    def __cache_read(self, raw, **kwargs):
+    async def __cache_read(self, resp_type, **kwargs):
         if not self.use_cache:
             return None
         
-        value = self.cache.retrieve(self.__operation_id, kwargs)
+        value = self.cache.retrieve(self.__operation_id, kwargs) #TODO: Make this support async too
         result = None
         if value is not None:
-            if raw:
+            if resp_type == ResponseType.AiohttpResponse:
                 result = value
-            else:
+            elif resp_type == ResponseType.Text:
+                result = await value.text()
+            elif resp_type == ResponseType.Json:
                 try:
-                    result = json.loads(value)
+                    result = await value.json()
                 except Exception:
                     logger.exception("Could not parse JSON")
+            else:
+                logger.warn("Invalid response type: {}".format(resp_type))
             if result is not None:
                 logger.info("Result found in cache for {} : {}".format(self.__operation_id, kwargs))
         return result
@@ -196,4 +224,9 @@ class EsiOp(object):
 
     def __str__(self):
         return self.__operation_id
+
+class ResponseType(Enum):
+    Json = 1
+    Text = 2
+    AiohttpResponse = 3
         
