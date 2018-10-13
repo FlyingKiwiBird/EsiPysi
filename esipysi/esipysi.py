@@ -98,5 +98,5 @@ class EsiPysi(object):
         """
         operation = self.operations.get(operation_id)
         if operation is None:
-            return None
+            raise ValueError("Could not find an operation with the name '{}'".format(operation_id))
         return EsiOp(operation, self.base_url, **self.args)
