@@ -2,6 +2,7 @@ import unittest
 import asyncio
 from esipysi import EsiPysi
 import datetime
+from urllib.error import HTTPError
 
 class BasicTests(unittest.TestCase):
 
@@ -33,6 +34,16 @@ class BasicTests(unittest.TestCase):
         response = loop.run_until_complete(op.response(categories="character", search="Flying Kiwi Sertan"))
         text = loop.run_until_complete(response.json())
         self.assertEqual(text, {'character': [95095106]})
+
+    def test_404_op(self):
+        esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test")
+        op = esi.get_operation("get_universe_regions_region_id")
+        loop = asyncio.get_event_loop()
+        try:
+            response = loop.run_until_complete(op.response(region_id=9))
+            self.fail("Should raise exception")
+        except HTTPError as ex:
+            self.assertEqual(ex.code, 404)
 
 
 

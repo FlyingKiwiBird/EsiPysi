@@ -197,7 +197,7 @@ class EsiOp(object):
             raise exception
 
         if self.use_cache:
-            self.cache.store(self.__operation_id, kwargs, resp, self.__cached_seconds)
+            self.cache.store(self.__operation_id, kwargs, text, self.__cached_seconds)
 
         if resp_type == ResponseType.AiohttpResponse:
             return resp
@@ -214,17 +214,20 @@ class EsiOp(object):
     async def __cache_read(self, resp_type, **kwargs):
         if not self.use_cache:
             return None
+
+        if not self.cache.in_cache(self.__operation_id, kwargs):
+            return None
         
         value = self.cache.retrieve(self.__operation_id, kwargs) #TODO: Make this support async too
         result = None
         if value is not None:
             if resp_type == ResponseType.AiohttpResponse:
-                result = value
+                return None #cache not supported
             elif resp_type == ResponseType.Text:
-                result = await value.text()
+                result = value
             elif resp_type == ResponseType.Json:
                 try:
-                    result = await value.json()
+                    result = json.loads(value)
                 except Exception:
                     logger.exception("Could not parse JSON")
             else:
