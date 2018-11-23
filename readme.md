@@ -12,6 +12,8 @@ to create a lightweight and fast tool which makes devloping with Esi easier.
 * Light input validation
     *  Only validates that the parameters are in the Esi Swagger Spec, does not validate types/values
 * Caching using Redis
+* Automatic retries for certain error codes
+    * Typically those pesky 501s
 
 ## Install
 
@@ -72,7 +74,7 @@ EsiPysi allows you to get the response from Esi in a variety of ways:
 
 * ```operation.json()``` - return the result as a dict parsed from JSON
 * ```operation.text()``` - return the result as plain text
-* ```operation.response()``` - return a [aiohttp.ClientResponse](https://docs.aiohttp.org/en/stable/client_reference.html#aiohttp.ClientResponse) object
+* ```operation.response()``` - return a [aiohttp.ClientResponse](https://docs.aiohttp.org/en/stable/client_reference.html#aiohttp.ClientResponse) object (Note: Does not support caching)
 
 ### Caching
 
