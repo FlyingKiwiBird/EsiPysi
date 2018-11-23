@@ -30,6 +30,7 @@ class EsiOp(object):
             cache -- an EsiCache object to use for caching queries
             auth -- an EsiAuth object to use for authorizing the ESI call
             loop -- A asyncio event loop to use for async calls
+            retries -- number of retries to attempt
         """
         self.__operation = operation
         self.__path = operation.get("path")
@@ -43,6 +44,7 @@ class EsiOp(object):
         auth_args = kwargs.get("auth")
         self.__auth = None
         self.set_auth(auth_args)
+        self.retries = kwargs.get("retries", 5)
 
         self.__loop = kwargs.get("loop")
         self.__use_loop = True
@@ -107,14 +109,24 @@ class EsiOp(object):
         return await self.__call_esi_async(ResponseType.AiohttpResponse, **kwargs)
 
     async def __call_esi_async(self, resp_type, **kwargs):
-        if self.__loop is None:
-            async with aiohttp.ClientSession() as session:
-                return await self.__execute(session, resp_type, **kwargs)
-        else:
-            async with aiohttp.ClientSession(loop = self.__loop) as session:
-                return await self.__execute(session, resp_type, **kwargs)
-        
-
+        tries = 0
+        dont_retry = [401, 403, 404, 420]
+        while tries <= self.retries:
+            tries += 1
+            try:
+                if self.__loop is None:
+                    async with aiohttp.ClientSession() as session:
+                        return await self.__execute(session, resp_type, **kwargs)
+                else:
+                    async with aiohttp.ClientSession(loop = self.__loop) as session:
+                        return await self.__execute(session, resp_type, **kwargs)
+            except HTTPError as httpEx:
+                if httpEx.code in dont_retry:
+                    raise httpEx
+            except Exception:
+                pass
+            await asyncio.sleep(5)
+            
     async def __execute(self, session, resp_type, **kwargs):
 
         cache_value = await self.__cache_read(resp_type, **kwargs)
@@ -220,7 +232,6 @@ class EsiOp(object):
             if result is not None:
                 logger.info("Result found in cache for {} : {}".format(self.__operation_id, kwargs))
         return result
-
 
     def __str__(self):
         return self.__operation_id

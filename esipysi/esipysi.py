@@ -25,6 +25,7 @@ class EsiPysi(object):
             user_agent -- user agent to send with ESI calls
             cache -- EsiCache object to use for caching
             auth -- EsiAuth to use for authorized calls to ESI
+            retries -- Number of retries when ESI returns a retryable error, 0 disables, -1 is unlimited
             loop -- Event loop to use for asyncio
         """
         self.args = kwargs
