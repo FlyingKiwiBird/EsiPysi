@@ -10,6 +10,7 @@ from json.decoder import JSONDecodeError
 
 from .cache.cache import EsiCache
 from .auth import EsiAuth
+from .esiresponse import EsiResponse
 
 import logging
 
@@ -73,63 +74,85 @@ class EsiOp(object):
 
     async def json(self, **kwargs):
         """
+        LEGACY - may be depricated in the future
         Call the ESI API and retrieve the json data and decode as a dict
 
         Keyword arguments:
             Arguments from the ESI call
         """
-        return await self.__call_esi_async(ResponseType.Json, **kwargs)
+        response = await self.__call_esi_async(**kwargs)
+        return response.json()
 
     async def text(self, **kwargs):
         """
+        LEGACY - may be depricated in the future
         Call the ESI API and retrieve the result as plain text (string)
 
         Keyword arguments:
             Arguments from the ESI call
         """
-        return await self.__call_esi_async(ResponseType.Text, **kwargs)
+        response = await self.__call_esi_async(**kwargs)
+        return response.text
 
     async def raw(self, **kwargs):
         """
+        LEGACY - may be depricated in the future
         Call the ESI API and retrieve the result as plain text (string)
-        This is a legacy call to not break applications that used EsiPysi pre 0.6, use "text" instead
 
         Keyword arguments:
             Arguments from the ESI call
         """
-        return await self.__call_esi_async(ResponseType.Text, **kwargs)
+        response = await self.__call_esi_async(**kwargs)
+        return response.text
 
     async def response(self, **kwargs):
         """
-        Call the ESI API and retrieve the result as an AioHttp ClientResponse object
+        DEPRICATED - No longer used
+        Call the ESI API and retrieve the result as an EsiResponse object
 
         Keyword arguments:
             Arguments from the ESI call
         """
-        return await self.__call_esi_async(ResponseType.AiohttpResponse, **kwargs)
+        DeprecationWarning("This feature has been removed, use execute instead for almost parity")
+        return None
 
-    async def __call_esi_async(self, resp_type, **kwargs):
+    async def execute(self, **kwargs):
+        """
+        LEGACY - may be depricated in the future
+        Call the ESI API and retrieve the result as an EsiResponse object
+
+        Keyword arguments:
+            Arguments from the ESI call
+        """
+        return await self.__call_esi_async(**kwargs)
+
+    async def __call_esi_async(self, **kwargs):
         tries = 0
         dont_retry = [401, 403, 404, 420]
+        last_ex = None
         while tries <= self.retries:
             tries += 1
             try:
                 if self.__loop is None:
                     async with aiohttp.ClientSession() as session:
-                        return await self.__execute(session, resp_type, **kwargs)
+                        return await self.__call(session, **kwargs)
                 else:
                     async with aiohttp.ClientSession(loop = self.__loop) as session:
-                        return await self.__execute(session, resp_type, **kwargs)
+                        return await self.__call(session, **kwargs)
             except HTTPError as httpEx:
                 if httpEx.code in dont_retry:
                     raise httpEx
-            except Exception:
-                pass
-            await asyncio.sleep(5)
+                else:
+                    last_ex = httpEx
+            except Exception as ex:
+                last_ex = ex   
+            await asyncio.sleep(0.1)
+        if last_ex is not None:
+            raise last_ex
             
-    async def __execute(self, session, resp_type, **kwargs):
+    async def __call(self, session, **kwargs):
 
-        cache_value = await self.__cache_read(resp_type, **kwargs)
+        cache_value = await self.__cache_read(**kwargs)
         if cache_value is not None:
             return cache_value
 
@@ -171,7 +194,7 @@ class EsiOp(object):
 
         if self.__verb.lower() == "get":
             async with session.get(url, params=query_parameters, headers=headers) as resp:
-                return await self.__process_response(resp, resp_type, **kwargs)
+                return await self.__process_response(resp, **kwargs)
         else:
             #After this I don't know WTF CCP was thinking
             if query_parameters:
@@ -181,66 +204,36 @@ class EsiOp(object):
             full_url = url + query_str
             if self.__verb.lower() == "post":
                 async with session.post(full_url, data=body, headers=headers) as resp:
-                    return await self.__process_response(resp, resp_type, **kwargs)
+                    return await self.__process_response(resp, **kwargs)
             elif self.__verb.lower() == "put":
                 async with session.put(full_url, data=body, headers=headers) as resp:
-                    return await self.__process_response(resp, resp_type, **kwargs)
+                    return await self.__process_response(resp, **kwargs)
             elif self.__verb.lower() == "delete":
                 async with session.delete(full_url, data=body, headers=headers) as resp:
-                    return await self.__process_response(resp, resp_type, **kwargs)
+                    return await self.__process_response(resp, **kwargs)
         
-    async def __process_response(self, resp, resp_type, **kwargs):
+    async def __process_response(self, resp, **kwargs):
         text = await resp.text()
         if resp.status >= 400:
             exception = HTTPError(resp.url, resp.status, text, resp.headers, None)
             logger.exception("ESI HTTP error occured: {}".format(exception))
             raise exception
+        
+        response = EsiResponse(text, resp.headers.copy(), resp.status, resp.url)
 
         if self.use_cache:
-            self.cache.store(self.__operation_id, kwargs, text, self.__cached_seconds)
+            self.cache.store(self.__operation_id, kwargs, response, self.__cached_seconds)
+        return response
 
-        if resp_type == ResponseType.AiohttpResponse:
-            return resp
-
-        if resp_type == ResponseType.Text:
-            return text
-
-        try:
-            return await resp.json()
-        except Exception:
-            logger.exception("Could not parse JSON")
-            return None
-
-    async def __cache_read(self, resp_type, **kwargs):
+    async def __cache_read(self, **kwargs):
         if not self.use_cache:
             return None
 
         if not self.cache.in_cache(self.__operation_id, kwargs):
             return None
         
-        value = self.cache.retrieve(self.__operation_id, kwargs) #TODO: Make this support async too
-        result = None
-        if value is not None:
-            if resp_type == ResponseType.AiohttpResponse:
-                return None #cache not supported
-            elif resp_type == ResponseType.Text:
-                result = value
-            elif resp_type == ResponseType.Json:
-                try:
-                    result = json.loads(value)
-                except Exception:
-                    logger.exception("Could not parse JSON")
-            else:
-                logger.warn("Invalid response type: {}".format(resp_type))
-            if result is not None:
-                logger.info("Result found in cache for {} : {}".format(self.__operation_id, kwargs))
-        return result
+        return self.cache.retrieve(self.__operation_id, kwargs) #TODO: Make this support async too
 
     def __str__(self):
         return self.__operation_id
-
-class ResponseType(Enum):
-    Json = 1
-    Text = 2
-    AiohttpResponse = 3
         
