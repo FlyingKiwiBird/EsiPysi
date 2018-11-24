@@ -65,16 +65,17 @@ op.set_auth(auth)
 And then you can execute that operation with parameters
 
 ```python
-result = await op.json(categories="character", search="Flying Kiwi Sertan")
+result = await op.execute(categories="character", search="Flying Kiwi Sertan")
 ```
 
-### Response types
+### Response Object
 
-EsiPysi allows you to get the response from Esi in a variety of ways:
+EsiPysi returns a response object called EsiResponse, it contains the following:
 
-* ```operation.json()``` - return the result as a dict parsed from JSON
-* ```operation.text()``` - return the result as plain text
-* ```operation.response()``` - return a [aiohttp.ClientResponse](https://docs.aiohttp.org/en/stable/client_reference.html#aiohttp.ClientResponse) object (Note: Does not support caching)
+* `response.text` - The plain text of the body of the response
+* `resonse.json()` - The text decoded as json into a python Dict
+* `response.status` - The HTTP status code (likely 200)
+* `response.headers` - a [CIMultiDict](https://multidict.readthedocs.io/en/stable/multidict.html#cimultidict) which is a special dict cabable of holding multiple of the same key because headers are funky.  They act just like a `Dict` with some extras.
 
 ### Caching
 
