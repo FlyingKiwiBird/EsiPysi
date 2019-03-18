@@ -27,14 +27,14 @@ Requires python 3.5+
 
 ## How to use
 
-Get familliar with the [ESI reference](https://esi.tech.ccp.is/latest/#/) and [Eve SSO](http://eveonline-third-party-documentation.readthedocs.io/en/latest/sso/authentication.html)
+Get familliar with the [ESI reference](https://esi.evetech.net/latest/#/) and [Eve SSO](http://eveonline-third-party-documentation.readthedocs.io/en/latest/sso/authentication.html)
 
 start with an EsiPysi object, this will keep track of global settings like which Esi version to use (_latest is reccomended)
 
 ```python
 from esipysi import EsiPysi
 
-esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here")
+esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here")
 ```
 
 Now from that object you can create operations, pass the operation ID to the get_operation function
@@ -94,5 +94,5 @@ Now create a RedisCache object and pass it to the EsiPysi object
 from esipysy import EsiPysi
 from esipysy.cache import RedisCache
 cache = RedisCache(r)
-esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here", cache=cache)
+esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here", cache=cache)
 ```

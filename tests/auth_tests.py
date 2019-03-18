@@ -8,7 +8,7 @@ import datetime
 class AuthTests(unittest.TestCase):
     
     def test_auth_op(self):
-        esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test")
+        esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test")
         op =  esi.get_operation("get_characters_character_id_ship")
         ai = AuthInfo()
         auth = EsiAuth(ai.client_id, ai.client_secret, ai.access_token, ai.refresh_token,  datetime.datetime(1970,1,1))

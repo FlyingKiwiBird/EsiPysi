@@ -9,7 +9,7 @@ class CacheTests(unittest.TestCase):
     def test_simple_op(self):
         loop = asyncio.get_event_loop()
         cache = MockCache()
-        esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test", cache=cache)
+        esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test", cache=cache)
         op_id = "get_search"
         data = {"categories" : "character", "search" : "Flying Kiwi Sertan"}
         op = esi.get_operation(op_id)
@@ -20,7 +20,7 @@ class CacheTests(unittest.TestCase):
     def test_cached_list_op(self):
         loop = asyncio.get_event_loop()
         cache = MockCache()
-        esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test", cache=cache)
+        esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test", cache=cache)
         op_id = "post_universe_names"
         data = {"ids":[30000142, 30002693]}
         op = esi.get_operation(op_id)
@@ -32,7 +32,7 @@ class CacheTests(unittest.TestCase):
     def test_cache_retrival(self):
         loop = asyncio.get_event_loop()
         cache = MockCache()
-        esi = EsiPysi("https://esi.tech.ccp.is/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test", cache=cache)
+        esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test", cache=cache)
         op_id = "get_search"
         data = {"categories" : "character", "search" : "Flying Kiwi Sertan"}
         op = esi.get_operation(op_id)

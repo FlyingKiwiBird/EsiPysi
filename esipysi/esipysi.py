@@ -41,12 +41,17 @@ class EsiPysi(object):
         self.data = {}
         
         r = requests.get(swagger_url)
-        data = r.json()
+        try:
+            data = r.json()
+        except:
+            logger.exception("Parse error, spec written to file")
+            with open('esi-spec-error.json', 'w') as esifile:
+                esifile.write(r.text)
+                return
             
         self.data = data
         self.__analyze_swagger()
         self.__is_ready = True
-
 
     def __analyze_swagger(self):
         #Get base url
