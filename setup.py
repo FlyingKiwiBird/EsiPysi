@@ -3,10 +3,10 @@ import esipysi
 from setuptools import setup, find_packages
 
 try:
-    with io.open('readme.md') as reader:
-        readme = reader.read()
+    with open("README.md", "r") as fh:
+        long_description = fh.read()
 except:
-    readme = ""
+    long_description = ""
 
 setup(
     name = "EsiPysi",
@@ -24,7 +24,8 @@ setup(
         "requests",
         "redis"
     ],
-    long_description=readme,
+    long_description_content_type='text/markdown',
+    long_description=long_description,
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

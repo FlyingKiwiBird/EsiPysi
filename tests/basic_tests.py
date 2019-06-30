@@ -12,12 +12,14 @@ class BasicTests(unittest.TestCase):
         loop = asyncio.get_event_loop()
         result = loop.run_until_complete(op.execute(categories="character", search="Flying Kiwi Sertan"))
         self.assertEqual(result.json(), {'character': [95095106]})
+        esi.close()
 
     def test_post_op(self):
         esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test")
         op = esi.get_operation("post_universe_names")
         loop = asyncio.get_event_loop()
         result = loop.run_until_complete(op.execute(ids=[30000142, 30002693]))
+        esi.close()
 
     def test_text_op(self):
         esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test")
@@ -25,6 +27,7 @@ class BasicTests(unittest.TestCase):
         loop = asyncio.get_event_loop()
         result = loop.run_until_complete(op.execute(categories="character", search="Flying Kiwi Sertan"))
         self.assertEqual(result.text, "{\"character\":[95095106]}")
+        esi.close()
 
     def test_404_op(self):
         esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test")
@@ -35,6 +38,8 @@ class BasicTests(unittest.TestCase):
             self.fail("Should raise exception")
         except HTTPError as ex:
             self.assertEqual(ex.code, 404)
+        finally:
+            esi.close()
 
     def test_headers(self):
         esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test")
@@ -42,6 +47,7 @@ class BasicTests(unittest.TestCase):
         loop = asyncio.get_event_loop()
         result = loop.run_until_complete(op.execute(categories="character", search="Flying Kiwi Sertan"))
         self.assertIsNotNone(result.headers.get("x-esi-request-id"))
+        esi.close()
 
 
     

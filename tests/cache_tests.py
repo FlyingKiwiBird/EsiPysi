@@ -16,6 +16,7 @@ class CacheTests(unittest.TestCase):
         result = loop.run_until_complete(op.execute(**data))
 
         self.assertTrue(cache.in_cache(op_id, data))
+        esi.close()
 
     def test_cached_list_op(self):
         loop = asyncio.get_event_loop()
@@ -27,6 +28,7 @@ class CacheTests(unittest.TestCase):
         result = loop.run_until_complete(op.execute(**data))
 
         self.assertTrue(cache.in_cache(op_id, data))
+        esi.close()
 
         
     def test_cache_retrival(self):
@@ -46,3 +48,4 @@ class CacheTests(unittest.TestCase):
         result2 = loop.run_until_complete(op.execute(**data))
         self.assertEqual(result_id, result2.headers.get("x-esi-request-id"))
         self.assertEqual(result2.json(), {'character': [95095106]})
+        esi.close()

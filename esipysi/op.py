@@ -47,12 +47,7 @@ class EsiOp(object):
         self.set_auth(auth_args)
         self.retries = kwargs.get("retries", 5)
 
-        self.__loop = kwargs.get("loop")
-        self.__use_loop = True
-        if self.__loop is None:
-            self.__use_loop = False
-        elif not isinstance(self.__loop, asyncio.BaseEventLoop):
-            raise TypeError("loop must be a asyncio event loop")
+        self.__session = kwargs.get("session")
 
         self.use_cache = False
         if self.cache is not None:
@@ -133,12 +128,7 @@ class EsiOp(object):
         while tries <= self.retries:
             tries += 1
             try:
-                if self.__loop is None:
-                    async with aiohttp.ClientSession() as session:
-                        return await self.__call(session, **kwargs)
-                else:
-                    async with aiohttp.ClientSession(loop = self.__loop) as session:
-                        return await self.__call(session, **kwargs)
+                return await self.__call(self.__session, **kwargs)
             except HTTPError as httpEx:
                 if httpEx.code in dont_retry:
                     raise httpEx

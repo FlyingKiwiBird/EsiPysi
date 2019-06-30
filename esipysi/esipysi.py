@@ -27,6 +27,7 @@ class EsiPysi(object):
             auth -- EsiAuth to use for authorized calls to ESI
             retries -- Number of retries when ESI returns a retryable error, 0 disables, -1 is unlimited
             loop -- Event loop to use for asyncio
+            session -- aiohttp session to use, note: loop will be useless if set with session, set the loop you want in the session instead
         """
         self.args = kwargs
         self.__is_ready = False
@@ -34,11 +35,37 @@ class EsiPysi(object):
 
         cache = kwargs.get("cache")
         if cache is not None:
-            if not issubclass(EsiCache, type(cache)):
-                TypeError("cache should be of the type EsiCache")
+            if not issubclass(type(cache), EsiCache):
+                raise TypeError("cache should be of the type EsiCache")
 
         self.operations = {}
         self.data = {}
+
+        self.__loop = self.args.get('loop')
+        session= self.args.get('session')
+
+        if session is None:
+            connector = aiohttp.TCPConnector(limit=50)
+            if self.__loop is None:
+                self.__session = aiohttp.ClientSession(connector=connector)
+            else:
+                if not issubclass(type(self.__loop), asyncio.BaseEventLoop):
+                    raise TypeError("loop must be a asyncio Loop")
+                self.__session = aiohttp.ClientSession(loop = self.__loop, connector=connector)
+        else:
+            if not isinstance(type(session), aiohttp.ClientSession):
+                raise TypeError("session must be a aiohttp ClientSession")
+            self.__session = session
+
+        self.args['session'] = self.__session
+
+        if self.__loop is None:
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            self.__loop = loop
         
         r = requests.get(swagger_url)
         try:
@@ -52,6 +79,17 @@ class EsiPysi(object):
         self.data = data
         self.__analyze_swagger()
         self.__is_ready = True
+
+    async def close_async(self):
+        logger.info("Closing the client")
+        await self.__session.close()
+
+    def close(self):
+        logger.info("Closing the client")
+        if self.__loop.is_running: 
+            self.__loop.create_task(self.__session.close())
+        else:
+            self.__loop.run_until_complete(self.__session.close())
 
     def __analyze_swagger(self):
         #Get base url

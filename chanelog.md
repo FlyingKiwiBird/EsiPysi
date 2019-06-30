@@ -1,3 +1,7 @@
+# 0.8.1
+- Each client now spawns 1 session which is used for every call of that client
+- Sessions have 50 max connections to avoid problem of windows running out of file descriptors
+
 # 0.7.0
 - Moved from different response types to a simple response object which contains the data, headers, status, and url
 - The object will also parse data into json

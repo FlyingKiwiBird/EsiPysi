@@ -15,6 +15,7 @@ class AuthTests(unittest.TestCase):
         op.set_auth(auth)
         loop = asyncio.get_event_loop()
         result = loop.run_until_complete(op.json(character_id=ai.character_id))
+        esi.close()
         #print(result)
 
     def test_auth_verify(self):
