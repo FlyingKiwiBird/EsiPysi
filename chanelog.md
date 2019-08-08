@@ -1,3 +1,6 @@
+# 0.8.2
+- FIXED: Bug wit setting an event loop caused mismatch between session & connector for AIOHttp
+
 # 0.8.1
 - Each client now spawns 1 session which is used for every call of that client
 - Sessions have 50 max connections to avoid problem of windows running out of file descriptors

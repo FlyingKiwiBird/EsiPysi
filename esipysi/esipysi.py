@@ -44,21 +44,6 @@ class EsiPysi(object):
         self.__loop = self.args.get('loop')
         session= self.args.get('session')
 
-        if session is None:
-            connector = aiohttp.TCPConnector(limit=50)
-            if self.__loop is None:
-                self.__session = aiohttp.ClientSession(connector=connector)
-            else:
-                if not issubclass(type(self.__loop), asyncio.BaseEventLoop):
-                    raise TypeError("loop must be a asyncio Loop")
-                self.__session = aiohttp.ClientSession(loop = self.__loop, connector=connector)
-        else:
-            if not isinstance(type(session), aiohttp.ClientSession):
-                raise TypeError("session must be a aiohttp ClientSession")
-            self.__session = session
-
-        self.args['session'] = self.__session
-
         if self.__loop is None:
             try:
                 loop = asyncio.get_event_loop()
@@ -66,6 +51,22 @@ class EsiPysi(object):
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
             self.__loop = loop
+
+        if session is None:
+            if self.__loop is None:
+                connector = aiohttp.TCPConnector(limit=50)
+                self.__session = aiohttp.ClientSession(connector=connector)
+            else:
+                if not issubclass(type(self.__loop), asyncio.BaseEventLoop):
+                    raise TypeError("loop must be a asyncio Loop")
+                connector = aiohttp.TCPConnector(limit=50, loop = self.__loop)
+                self.__session = aiohttp.ClientSession(loop = self.__loop, connector=connector)
+        else:
+            if not isinstance(type(session), aiohttp.ClientSession):
+                raise TypeError("session must be a aiohttp ClientSession")
+            self.__session = session
+
+        self.args['session'] = self.__session
         
         r = requests.get(swagger_url)
         try:
