@@ -40,7 +40,7 @@ esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquili
 Now from that object you can create operations, pass the operation ID to the get_operation function
 
 ```python
-op = await esi.get_operation("get_search")
+op = esi.get_operation("get_search")
 ```
 
 If it requires authorization you can use EsiAuth
