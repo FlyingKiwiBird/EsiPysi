@@ -1,7 +1,7 @@
-# 0.8.3
+### 0.8.3
 - FIXED: Close also closes the connector now 
 
-# 0.8.2
+### 0.8.2
 - FIXED: Bug with setting an event loop caused mismatch between session & connector for AIOHttp
 
 # 0.8.1
@@ -12,7 +12,7 @@
 - Moved from different response types to a simple response object which contains the data, headers, status, and url
 - The object will also parse data into json
 
-# 0.6.1
+### 0.6.1
 - Fixed a caching issue due to pickling of a "futures" object
 
 # 0.6.0
