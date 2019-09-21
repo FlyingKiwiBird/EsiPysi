@@ -54,13 +54,13 @@ class EsiPysi(object):
 
         if session is None:
             if self.__loop is None:
-                connector = aiohttp.TCPConnector(limit=50)
-                self.__session = aiohttp.ClientSession(connector=connector)
+                self.__connector = aiohttp.TCPConnector(limit=50)
+                self.__session = aiohttp.ClientSession(connector=self.__connector)
             else:
                 if not issubclass(type(self.__loop), asyncio.BaseEventLoop):
                     raise TypeError("loop must be a asyncio Loop")
-                connector = aiohttp.TCPConnector(limit=50, loop = self.__loop)
-                self.__session = aiohttp.ClientSession(loop = self.__loop, connector=connector)
+                self.__connector = aiohttp.TCPConnector(limit=50, loop = self.__loop)
+                self.__session = aiohttp.ClientSession(loop = self.__loop, connector=self.__connector)
         else:
             if not isinstance(type(session), aiohttp.ClientSession):
                 raise TypeError("session must be a aiohttp ClientSession")
@@ -83,8 +83,9 @@ class EsiPysi(object):
 
     async def close_async(self):
         logger.info("Closing the client")
+        await self.__connector.close()
         await self.__session.close()
-
+        
     def close(self):
         logger.info("Closing the client")
         if self.__loop.is_running: 

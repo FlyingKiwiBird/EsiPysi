@@ -1,5 +1,8 @@
+# 0.8.3
+- FIXED: Close also closes the connector now 
+
 # 0.8.2
-- FIXED: Bug wit setting an event loop caused mismatch between session & connector for AIOHttp
+- FIXED: Bug with setting an event loop caused mismatch between session & connector for AIOHttp
 
 # 0.8.1
 - Each client now spawns 1 session which is used for every call of that client
