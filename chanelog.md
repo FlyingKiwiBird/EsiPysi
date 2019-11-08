@@ -1,3 +1,6 @@
+### 0.8.4
+- Errors should now be handled better (better logging)
+
 ### 0.8.3
 - FIXED: Close also closes the connector now 
 
