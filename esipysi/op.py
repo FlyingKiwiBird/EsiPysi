@@ -113,9 +113,6 @@ class EsiOp(object):
 
     async def execute(self, **kwargs):
         """
-        LEGACY - may be depricated in the future
-        Call the ESI API and retrieve the result as an EsiResponse object
-
         Keyword arguments:
             Arguments from the ESI call
         """
@@ -124,21 +121,20 @@ class EsiOp(object):
     async def __call_esi_async(self, **kwargs):
         tries = 0
         dont_retry = [401, 403, 404, 420]
-        last_ex = None
         while tries <= self.retries:
             tries += 1
             try:
                 return await self.__call(self.__session, **kwargs)
             except HTTPError as httpEx:
                 if httpEx.code in dont_retry:
-                    raise httpEx
+                    raise
                 else:
-                    last_ex = httpEx
-            except Exception as ex:
-                last_ex = ex   
+                    if tries > self.retries:
+                        raise
+            except:
+                if tries > self.retries:
+                    raise
             await asyncio.sleep(0.1)
-        if last_ex is not None:
-            raise last_ex
             
     async def __call(self, session, **kwargs):
 
@@ -157,6 +153,7 @@ class EsiOp(object):
         body = None
         query_parameters = {}
         headers = {}
+        headers["accept"] = "application/json"
 
         for key, value in kwargs.items():
             if key not in self.__parameters:
@@ -205,8 +202,8 @@ class EsiOp(object):
     async def __process_response(self, resp, **kwargs):
         text = await resp.text()
         if resp.status >= 400:
-            exception = HTTPError(resp.url, resp.status, text, resp.headers, None)
-            logger.exception("ESI HTTP error occured: {}".format(exception))
+            exception = HTTPError(resp.url, resp.status, text, resp.headers.copy(), None)
+            logger.exception("ESI HTTP error occured: url={}, status={}, result headers={}, text={}".format(text, resp.headers.copy(), resp.status, text))
             raise exception
         
         response = EsiResponse(text, resp.headers.copy(), resp.status, resp.url)
