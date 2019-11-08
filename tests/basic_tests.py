@@ -38,6 +38,7 @@ class BasicTests(unittest.TestCase):
             self.fail("Should raise exception")
         except HTTPError as ex:
             self.assertEqual(ex.code, 404)
+            print(ex)
         finally:
             esi.close()
 

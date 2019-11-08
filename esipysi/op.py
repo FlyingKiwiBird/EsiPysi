@@ -203,7 +203,7 @@ class EsiOp(object):
         text = await resp.text()
         if resp.status >= 400:
             exception = HTTPError(resp.url, resp.status, text, resp.headers.copy(), None)
-            logger.exception("ESI HTTP error occured: url={}, status={}, result headers={}, text={}".format(text, resp.headers.copy(), resp.status, text))
+            logger.exception("ESI HTTP error occured: url={}, status={}, result headers={}, text={}".format(resp.url, resp.headers.copy(), resp.status, text))
             raise exception
         
         response = EsiResponse(text, resp.headers.copy(), resp.status, resp.url)
