@@ -106,5 +106,7 @@ esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquili
 ### Contact / Links
 
 In game: Flying Kiwi Sertan
+
 GitHub: https://github.com/FlyingKiwiBird/EsiPysi
+
 PyPi: https://pypi.org/project/EsiPysi/
