@@ -1,3 +1,8 @@
+### 0.9.0
+- Changed to start/stop session for more control over aiohttp sessions
+- Fixed a bug with `asyncio.run()`
+- Deprecated everything but `op.execute()`
+
 ### 0.8.4
 - Errors should now be handled better (better logging)
 

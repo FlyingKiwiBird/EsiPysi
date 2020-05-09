@@ -14,7 +14,7 @@ class RedisCache(EsiCache):
         :param redis_client: The redis client to store the cache in
         :type redis_client: StrictRedis
         """
-        if not issubclass(StrictRedis, type(redis_client)):
+        if not issubclass(type(redis_client), StrictRedis):
             raise ValueError("redis_client should be a StrictRedis object")
 
         self.redis = redis_client

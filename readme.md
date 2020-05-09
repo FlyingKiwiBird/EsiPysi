@@ -29,12 +29,13 @@ Requires python 3.5+
 
 Get familliar with the [ESI reference](https://esi.evetech.net/latest/#/) and [Eve SSO](http://eveonline-third-party-documentation.readthedocs.io/en/latest/sso/authentication.html)
 
-start with an EsiPysi object, this will keep track of global settings like which Esi version to use (_latest is reccomended)
+start with an EsiPysi object, this will keep track of global settings like which Esi version to use (_latest is reccomended) and start a session
 
 ```python
 from esipysi import EsiPysi
 
 esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here")
+await esi.start_session()
 ```
 
 Now from that object you can create operations, pass the operation ID to the get_operation function
@@ -68,13 +69,18 @@ And then you can execute that operation with parameters
 result = await op.execute(categories="character", search="Flying Kiwi Sertan")
 ```
 
+When you are finished with a session, it is reccomended to stop it:
+```python
+await esi.stop_session()
+```
+
 ### Response Object
 
 EsiPysi returns a response object called EsiResponse, it contains the following:
 
 * `response.text` - The plain text of the body of the response
 * `resonse.json()` - The text decoded as json into a python Dict
-* `response.status` - The HTTP status code (likely 200)
+* `response.status` - The HTTP status code
 * `response.headers` - a [CIMultiDict](https://multidict.readthedocs.io/en/stable/multidict.html#cimultidict) which is a special dict cabable of holding multiple of the same key because headers are funky.  They act just like a `Dict` with some extras.
 
 ### Caching
@@ -96,3 +102,9 @@ from esipysy.cache import RedisCache
 cache = RedisCache(r)
 esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here", cache=cache)
 ```
+
+### Contact / Links
+
+In game: Flying Kiwi Sertan
+GitHub: https://github.com/FlyingKiwiBird/EsiPysi
+PyPi: https://pypi.org/project/EsiPysi/
