@@ -70,6 +70,13 @@ class EsiPysi(object):
         self.data = data
         self.__analyze_swagger()
 
+    async def __aenter__(self):
+        await self.start_session()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        await self.stop_session()
+
     async def start_session(self):
         if self.__session is not None:
             await self.stop_session()

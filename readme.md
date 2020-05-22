@@ -38,6 +38,13 @@ esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquili
 await esi.start_session()
 ```
 
+It also support the `with` syntax which will start and stop the sessions for you:
+
+```python
+async with EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here") as esi:
+    #Do stuff here
+```
+
 Now from that object you can create operations, pass the operation ID to the get_operation function
 
 ```python

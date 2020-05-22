@@ -7,12 +7,10 @@ from urllib.error import HTTPError
 class BasicTests(aiounittest.AsyncTestCase):
 
     async def test_simple_op(self):
-        esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test")
-        await esi.start_session()
-        op = esi.get_operation("get_search")
-        result = await op.execute(categories="character", search="Flying Kiwi Sertan")
-        self.assertEqual(result.json(), {'character': [95095106]})
-        await esi.stop_session()
+        async with EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test") as esi:
+            op = esi.get_operation("get_search")
+            result = await op.execute(categories="character", search="Flying Kiwi Sertan")
+            self.assertEqual(result.json(), {'character': [95095106]})
 
     async def test_post_op(self):
         esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test")
