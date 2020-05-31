@@ -34,14 +34,14 @@ start with an EsiPysi object, this will keep track of global settings like which
 ```python
 from esipysi import EsiPysi
 
-esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here")
-await esi.start_session()
+esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here").session()
+await esi.start()
 ```
 
 It also support the `with` syntax which will start and stop the sessions for you:
 
 ```python
-async with EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here") as esi:
+async with EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here").session() as esi:
     #Do stuff here
 ```
 

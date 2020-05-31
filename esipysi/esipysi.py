@@ -5,6 +5,7 @@ import json
 from .op import EsiOp
 from .auth import EsiAuth
 from .cache.cache import EsiCache
+from .esisession import EsiSession
 import logging
 
 logger = logging.getLogger("EsiPysi")
@@ -36,25 +37,13 @@ class EsiPysi(object):
             if not issubclass(type(cache), EsiCache):
                 raise TypeError("cache should be of the type EsiCache")
 
-        self.operations = {}
-        self.data = {}
-
-        self.__loop = self.args.get('loop')
-        session= self.args.get('session')
-
-        if self.__loop is None:
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            self.__loop = loop
-
-        self.__session = None
+        session = self.args.get('session')
         if session is not None:
             if not isinstance(type(session), aiohttp.ClientSession):
                 raise TypeError("session must be a aiohttp ClientSession")
-            self.__session = session
+
+        self.operations = {}
+        self.data = {}
         
         r = requests.get(swagger_url)
         try:
@@ -70,45 +59,9 @@ class EsiPysi(object):
         self.data = data
         self.__analyze_swagger()
 
-    async def __aenter__(self):
-        await self.start_session()
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb):
-        await self.stop_session()
-
-    async def start_session(self):
-        if self.__session is not None:
-            await self.stop_session()
-        if self.__loop is None:
-            self.__connector = aiohttp.TCPConnector(limit=50)
-            self.__session = aiohttp.ClientSession(connector=self.__connector)
-        else:
-            if not issubclass(type(self.__loop), asyncio.BaseEventLoop):
-                raise TypeError("loop must be a asyncio Loop")
-            self.__connector = aiohttp.TCPConnector(limit=50, loop = self.__loop)
-            self.__session = aiohttp.ClientSession(loop = self.__loop, connector=self.__connector)
-
-
-    async def stop_session(self):
-        logger.info("Closing the client")
-        try:
-            if self.__session is not None:
-                await self.__session.close()
-        except:
-            logger.exception("Exception occured while trying to shut down session")
-        finally:
-            await asyncio.sleep(0)
-
-        self.__session = None
-        self.__connector = None
-        
-    def stop_session_sync(self):
-        logger.info("Closing the client")
-        if self.__loop.is_running: 
-            self.__loop.create_task(self.stop_session())
-        else:
-            self.__loop.run_until_complete(self.stop_session())
+    def session(self):
+        session = EsiSession(self.base_url, self.operations, **self.args)
+        return session
 
     def __analyze_swagger(self):
         #Get base url
@@ -152,17 +105,4 @@ class EsiPysi(object):
 
         return ref
 
-    def get_operation(self, operation_id):
-        """
-        Get an ESI operation from it's id
-
-        Arguments:
-            operation_id -- The id of the swagger operation
-        """
-        if self.__session is None:
-            raise ValueError("Session is not active, please run start_session first")
-            
-        operation = self.operations.get(operation_id)
-        if operation is None:
-            raise ValueError("Could not find an operation with the name '{}'".format(operation_id))
-        return EsiOp(self.__session, operation, self.base_url, **self.args)
+   

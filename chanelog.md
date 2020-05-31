@@ -1,3 +1,6 @@
+### 0.9.2
+- Added EsiSession, that allows a single EsiPysi object to be active for the duration of the application which can spawn multiple short-lived sessions
+
 ### 0.9.1
 - Added `with` pattern to EsiPysi
 
