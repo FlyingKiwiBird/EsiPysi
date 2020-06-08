@@ -8,12 +8,6 @@ try:
 except:
     long_description = ""
 
-try:
-    with open("requirements.txt", "r") as fh:
-        reqs = fh.read()
-        req_list = reqs.splitlines()
-except:
-    req_lis = []
 
 setup(
     name = "EsiPysi",
@@ -25,7 +19,12 @@ setup(
     keywords = "Esi Eve Python Api",
     url = "https://github.com/FlyingKiwiBird/EsiPysi",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-    install_requires= req_list,
+    install_requires=[
+        "aiohttp==3.6.2",
+        "aiodns==2.0.0",
+        "requests==2.23.0",
+        "pytz==2020.1"
+    ],
     long_description_content_type='text/markdown',
     long_description=long_description,
     classifiers=[
