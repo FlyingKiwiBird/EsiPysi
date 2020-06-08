@@ -1,5 +1,7 @@
 from .cache import EsiCache
+from esipysi.esiresponse import EsiResponse
 import pickle
+from datetime import datetime
 try:
     from redis import StrictRedis
 except ImportError:
@@ -19,12 +21,19 @@ class RedisCache(EsiCache):
 
         self.redis = redis_client
 
-    def store(self, operation_id, operation_parameters, value, cache_time = -1):
+    def store(self, value : EsiResponse):
+
+        operation_id = value.operation_id
+        operation_parameters = value.operation_parameters
+
         key = self.get_key(operation_id, operation_parameters)
 
         self.redis.set(key, pickle.dumps(value))
-        if cache_time != -1:
-            self.redis.expire(key, cache_time)
+
+        expires_dt = value.expires()
+        if expires_dt is not None:
+            expires_diff = expires_dt - datetime.utcnow()
+            self.redis.expire(key, expires_diff.total_seconds())            
 
     def in_cache(self, operation_id, operation_parameters):
         key = self.get_key(operation_id, operation_parameters)
@@ -37,5 +46,6 @@ class RedisCache(EsiCache):
         value = self.redis.get(key)
         if value is None:
             return default
+        
         return pickle.loads(value)
 

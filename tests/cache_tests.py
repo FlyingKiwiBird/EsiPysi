@@ -1,13 +1,13 @@
 import aiounittest
 import asyncio
 from esipysi import EsiPysi
-from esipysi.cache import MockCache
+from esipysi.cache import DictCache
 import datetime
 
 class CacheTests(aiounittest.AsyncTestCase):
 
     async def test_simple_op(self):
-        cache = MockCache()
+        cache = DictCache()
         async with EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test", cache=cache).session() as esi:
             op_id = "get_search"
             data = {"categories" : "character", "search" : "Flying Kiwi Sertan"}
@@ -16,7 +16,7 @@ class CacheTests(aiounittest.AsyncTestCase):
             self.assertTrue(cache.in_cache(op_id, data))
 
     async def test_cached_list_op(self):
-        cache = MockCache()
+        cache = DictCache()
         async with EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test", cache=cache).session() as esi:
             op_id = "post_universe_names"
             data = {"ids":[30000142, 30002693]}
@@ -25,7 +25,7 @@ class CacheTests(aiounittest.AsyncTestCase):
             self.assertTrue(cache.in_cache(op_id, data))
   
     async def test_cache_retrival(self):
-        cache = MockCache()
+        cache = DictCache()
         async with EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test", cache=cache).session() as esi:
             op_id = "get_search"
             data = {"categories" : "character", "search" : "Flying Kiwi Sertan"}

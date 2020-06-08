@@ -135,7 +135,7 @@ class EsiOp(object):
             
     async def __call(self, session, **kwargs):
 
-        cache_value = await self.__cache_read(**kwargs)
+        cache_value = self.__cache_read(**kwargs)
         if cache_value is not None:
             return cache_value
 
@@ -203,13 +203,13 @@ class EsiOp(object):
             logger.exception("ESI HTTP error occured: url={}, status={}, result headers={}, text={}".format(resp.url, resp.headers.copy(), resp.status, text))
             raise exception
         
-        response = EsiResponse(text, resp.headers.copy(), resp.status, resp.url)
+        response = EsiResponse(text, resp.headers.copy(), resp.status, resp.url, self.__operation_id, kwargs)
 
         if self.__use_cache:
-            self.__cache.store(self.__operation_id, kwargs, response, self.__cached_seconds)
+            self.__cache.store(response)
         return response
 
-    async def __cache_read(self, **kwargs):
+    def __cache_read(self, **kwargs):
         if not self.__use_cache:
             return None
 

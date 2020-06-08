@@ -1,4 +1,4 @@
-aiohttp
-aiodns
-requests
-redis
+aiohttp==3.6.2
+aiodns==2.0.0
+requests==2.23.0
+pytz==2020.1

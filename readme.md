@@ -110,6 +110,8 @@ cache = RedisCache(r)
 esi = EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Your User Agent Here", cache=cache)
 ```
 
+**Note:** By default a `DictCache` is used, if you want to disable all caching, you can manually set `cache=None`
+
 ### Contact / Links
 
 In game: Flying Kiwi Sertan

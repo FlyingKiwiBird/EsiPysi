@@ -1,3 +1,8 @@
+### 0.10.0
+- Added a basic cache called `DictCache` which uses a simple python dictionary to store cached items
+- `DictCache` will be used by default if no other cache (or `None`) is specified
+- EsiResponse now includes the calling information `operation_id` and `operation_parameters` as well as a helper function `expires()` which returns a datetime of when the ESI cache expires
+
 ### 0.9.2
 - Added EsiSession, that allows a single EsiPysi object to be active for the duration of the application which can spawn multiple short-lived sessions
 

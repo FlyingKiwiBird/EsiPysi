@@ -3,6 +3,7 @@ import pickle
 import hashlib
 import logging
 import esipysi
+from esipysi.esiresponse import EsiResponse
 
 logger = logging.getLogger("EsiPysi")
 
@@ -15,7 +16,7 @@ class EsiCache(ABC):
         super().__init__()
 
     @abstractmethod
-    def store(self, operation_id, operation_parameters, value, cache_time = -1):
+    def store(self, value : EsiResponse):
         """
         Stores data in the cache
 
@@ -23,8 +24,6 @@ class EsiCache(ABC):
         :param operation_parameters: parameters for the operation
         :type operation_parameters: dict
         :param value: The value to be stored in the cache
-        :param cache_time: How long to store in cache (-1 is unlimited)
-        :type cache_time: int (seconds)
         """
         raise NotImplementedError()
 
@@ -42,7 +41,7 @@ class EsiCache(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def retrieve(self, operation_id, operation_parameters, default=None):
+    def retrieve(self, operation_id, operation_parameters, default=None) -> EsiResponse:
         """
         Returns data in the cache
 

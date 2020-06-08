@@ -4,7 +4,7 @@ import requests
 import json
 from .op import EsiOp
 from .auth import EsiAuth
-from .cache.cache import EsiCache
+from .cache import EsiCache, DictCache
 from .esisession import EsiSession
 import logging
 
@@ -32,7 +32,7 @@ class EsiPysi(object):
         """
         self.args = kwargs
 
-        cache = kwargs.get("cache")
+        cache = kwargs.get("cache", DictCache())
         if cache is not None:
             if not issubclass(type(cache), EsiCache):
                 raise TypeError("cache should be of the type EsiCache")

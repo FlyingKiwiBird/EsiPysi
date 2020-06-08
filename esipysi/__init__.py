@@ -1,13 +1,18 @@
+
+__version__ = '0.10.0'
+__name__ = 'EsiPysi'
+
+import logging
+
 try:
     from .esipysi import EsiPysi
     from .op import EsiOp
     from .auth import EsiAuth
-    import logging
 
 except ImportError:
-
+    logger = logging.getLogger(__name__)
+    logger.exception("Import error")
     pass
 
-__version__ = '0.9.2'
-__name__ = 'EsiPysi'
+
 
