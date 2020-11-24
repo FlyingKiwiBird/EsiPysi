@@ -22,6 +22,9 @@ class EsiSession(object):
         await self.stop()
 
     async def start(self):
+        """
+        Starts the session
+        """
         if self.__session is None:
             if self.__loop is None:
                 self.__connector = aiohttp.TCPConnector(limit=50)
@@ -32,7 +35,7 @@ class EsiSession(object):
                 self.__connector = aiohttp.TCPConnector(limit=50, loop = self.__loop)
                 self.__session = aiohttp.ClientSession(loop = self.__loop, connector=self.__connector)
 
-    def get_operation(self, operation_id):
+    def get_operation(self, operation_id) -> EsiOp:
         """
         Get an ESI operation from it's id
 
@@ -51,6 +54,9 @@ class EsiSession(object):
         return EsiOp(self.__session, operation, self.__base_url, **self.__args)
 
     async def stop(self):
+        """
+        Ends this session
+        """
         logger.info("Closing the client")
         try:
             if self.__session is not None:

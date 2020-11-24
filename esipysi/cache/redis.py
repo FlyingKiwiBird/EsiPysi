@@ -27,13 +27,14 @@ class RedisCache(EsiCache):
         operation_parameters = value.operation_parameters
 
         key = self.get_key(operation_id, operation_parameters)
+        expires_dt = value.expires()
+
+        if expires_dt is None:
+            return False
 
         self.redis.set(key, pickle.dumps(value))
-
-        expires_dt = value.expires()
-        if expires_dt is not None:
-            expires_diff = expires_dt - datetime.utcnow()
-            self.redis.expire(key, expires_diff.total_seconds())            
+        self.redis.expireat(key, expires_dt)
+        return True       
 
     def in_cache(self, operation_id, operation_parameters):
         key = self.get_key(operation_id, operation_parameters)

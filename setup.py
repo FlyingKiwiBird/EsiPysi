@@ -20,10 +20,10 @@ setup(
     url = "https://github.com/FlyingKiwiBird/EsiPysi",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=[
-        "aiohttp==3.6.2",
-        "aiodns==2.0.0",
-        "requests==2.23.0",
-        "pytz==2020.1"
+        "aiohttp",
+        "aiodns",
+        "requests",
+        "pytz"
     ],
     long_description_content_type='text/markdown',
     long_description=long_description,

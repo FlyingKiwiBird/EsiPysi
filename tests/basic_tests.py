@@ -26,11 +26,8 @@ class BasicTests(aiounittest.AsyncTestCase):
     async def test_404_op(self):
         async with EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test").session() as esi:
             op = esi.get_operation("get_universe_regions_region_id")
-            try:
-                await op.execute(region_id=9)
-                self.fail("Should raise exception")
-            except HTTPError as ex:
-                self.assertEqual(ex.code, 404)
+            result = await op.execute(region_id=9)
+            self.assertEqual(result.status, 404)
 
     async def test_headers(self):
         async with EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test").session() as esi:

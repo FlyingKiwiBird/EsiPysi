@@ -46,6 +46,7 @@ class EsiOp(object):
         self.__auth = None
         self.__retries = kwargs.get("retries", 5)
         self.__session = session
+        self.__throw_on_esi_error = kwargs.get("esi_400_codes_throw", False)
 
         if auth_args is not None:
             self.set_auth(auth_args)
@@ -108,7 +109,7 @@ class EsiOp(object):
         """
         raise DeprecationWarning("This feature has been removed, use execute instead")
 
-    async def execute(self, **kwargs):
+    async def execute(self, **kwargs) -> EsiResponse:
         """
         Keyword arguments:
             Arguments from the ESI call
@@ -196,16 +197,20 @@ class EsiOp(object):
                 async with session.delete(full_url, data=body, headers=headers) as resp:
                     return await self.__process_response(resp, **kwargs)
         
-    async def __process_response(self, resp, **kwargs):
+    async def __process_response(self, resp : EsiResponse, **kwargs):
         text = await resp.text()
         if resp.status >= 400:
             exception = HTTPError(resp.url, resp.status, text, resp.headers.copy(), None)
             logger.exception("ESI HTTP error occured: url={}, status={}, result headers={}, text={}".format(resp.url, resp.headers.copy(), resp.status, text))
-            raise exception
+            if resp.status >= 500:
+                raise exception
+
+            if self.__throw_on_esi_error:
+                raise exception
         
         response = EsiResponse(text, resp.headers.copy(), resp.status, resp.url, self.__operation_id, kwargs)
 
-        if self.__use_cache:
+        if self.__use_cache and resp.status == 200:
             self.__cache.store(response)
         return response
 

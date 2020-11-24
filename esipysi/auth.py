@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import asyncio
 import aiohttp
@@ -5,6 +7,8 @@ import requests
 import base64
 from urllib.error import HTTPError
 import logging
+
+
 
 logger = logging.getLogger("EsiPysi")
 
@@ -46,13 +50,13 @@ class EsiAuth(object):
         self.basic_auth = b64_encoded_key.decode('ascii')
 
     @classmethod
-    async def from_authorization_code(cls, client_id, client_secret, authorization_code, login_server="login.eveonline.com"):
+    async def from_authorization_code(cls, client_id, client_secret, authorization_code, login_server="login.eveonline.com") -> EsiAuth:
         esi_auth = cls(client_id, client_secret, None, None, None, login_server)
         await esi_auth.get_new_token(authorization_code)
         return esi_auth
 
     @classmethod 
-    async def from_refresh_token(cls, client_id, client_secret, refresh_token, login_server="login.eveonline.com"):
+    async def from_refresh_token(cls, client_id, client_secret, refresh_token, login_server="login.eveonline.com") -> EsiAuth:
         esi_auth = cls(client_id, client_secret, None, refresh_token, None, login_server)
         await esi_auth.get_new_token()
         return esi_auth

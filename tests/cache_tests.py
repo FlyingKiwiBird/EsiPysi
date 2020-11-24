@@ -15,14 +15,14 @@ class CacheTests(aiounittest.AsyncTestCase):
             await op.execute(**data)
             self.assertTrue(cache.in_cache(op_id, data))
 
-    async def test_cached_list_op(self):
+    async def test_no_cache_date_does_not_store(self):
         cache = DictCache()
         async with EsiPysi("https://esi.evetech.net/_latest/swagger.json?datasource=tranquility", user_agent="Eve Test", cache=cache).session() as esi:
             op_id = "post_universe_names"
             data = {"ids":[30000142, 30002693]}
             op = esi.get_operation(op_id)
             await op.execute(**data)
-            self.assertTrue(cache.in_cache(op_id, data))
+            self.assertFalse(cache.in_cache(op_id, data))
   
     async def test_cache_retrival(self):
         cache = DictCache()

@@ -17,6 +17,10 @@ class DictCache(EsiCache):
         operation_parameters = value.operation_parameters
         key = self.get_key(operation_id, operation_parameters)
         expires_dt = value.expires()
+        
+        if expires_dt is None:
+            return
+
         cache_item = {"item" : value, "expires" : expires_dt}
         self.__cache[key] = cache_item
 

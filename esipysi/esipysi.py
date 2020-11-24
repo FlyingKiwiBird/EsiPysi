@@ -59,7 +59,10 @@ class EsiPysi(object):
         self.data = data
         self.__analyze_swagger()
 
-    def session(self):
+    def session(self) -> EsiSession:
+        """
+        Get a new EsiSession
+        """
         session = EsiSession(self.base_url, self.operations, **self.args)
         return session
 

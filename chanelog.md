@@ -1,4 +1,12 @@
-### 0.10.0
+### 0.10.3
+- Changed Redis expiration to EXPIREAT to avoid potential expiration issues
+- Cache will no longer store keys without an expiration date (could have happened on an error when parsing exipry date from ESI)
+- EsiResponses will now be returned even if they result in a HTTP status that is in the 400 block (not found, not authorized, etc.).  Old behavior can be achieved by setting the optional argument `esi_400_codes_throw` to `True`
+
+### 0.10.2
+- Fix some dependency issues
+
+### 0.10.1
 - Added a basic cache called `DictCache` which uses a simple python dictionary to store cached items
 - `DictCache` will be used by default if no other cache (or `None`) is specified
 - EsiResponse now includes the calling information `operation_id` and `operation_parameters` as well as a helper function `expires()` which returns a datetime of when the ESI cache expires
